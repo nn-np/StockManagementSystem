@@ -1,4 +1,5 @@
-﻿using System;
+﻿using data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -36,7 +37,7 @@ namespace StockManagementSystem
         // 提交库存按钮
         private void click_submit(object sender, RoutedEventArgs e)
         {
-
+            new NnConnection();
         }
 
         private void click_coordinate(object sender, RoutedEventArgs e)

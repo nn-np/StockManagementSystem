@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StockManagementSystem.data
+namespace data
 {
     /// <summary>
     /// 用于对数据库的操作以及维护等工作
