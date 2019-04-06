@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:StockManagementSystem"
         mc:Ignorable="d"
         Title="StorkManagementSystem" Height="450" Width="800" MinWidth="800" MinHeight="450" WindowStartupLocation="CenterScreen" Activated="m_activited">
+    
     <Grid Background="#FFEEEEF2">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="4*"></ColumnDefinition>
@@ -19,26 +20,65 @@
         <TextBlock Margin="12,12,0,7">
             <Run FontSize="24" Language="zh-cn">多肽库存管理系统</Run>
             <LineBreak/>
-            <Run FontSize="16" FontWeight="Thin" Language="zh-cn">用于提交库存信息或输入OrderID、WorkNumber进行搜索</Run>
+            <Run FontSize="16" FontWeight="Thin" Language="zh-cn">用于提交库存信息或输入OrderID、WorkNumber、Corrdinate进行搜索</Run>
         </TextBlock>
-        <TextBox x:Name="m_tb" Grid.Row="1" TextWrapping="Wrap" Margin="5,5,0,5" AcceptsReturn="True" TextChanged="m_textcanged"/>
-        <Grid Grid.Column="1" Grid.Row="1" Margin="0,5,0,0" Width="159">
+        <TextBox x:Name="m_tb" Grid.Row="1" TextWrapping="Wrap" Margin="5,5,0,5" AcceptsReturn="True" TextChanged="m_textcanged" MouseDoubleClick="tb_doubleclick"/>
+        <Grid Grid.Column="1" Grid.Row="1" Margin="0,5,0,0" MinWidth="159">
             <Grid.RowDefinitions>
                 <RowDefinition Height="4*"></RowDefinition>
                 <RowDefinition Height="7*"></RowDefinition>
             </Grid.RowDefinitions>
-            <Button Content="可用坐标" Margin="5,0" VerticalAlignment="Bottom" Click="click_coordinate"/>
+            <Button Margin="5,0" Click="click_coordinate" VerticalAlignment="Bottom" HorizontalContentAlignment="Left" Padding="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="5*"/>
+                    </Grid.ColumnDefinitions>
+                    <ContentControl Template="{StaticResource bt_output}" Margin="3,3,0,3" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Margin="5,0,0,0">
+                        <Run FontSize="16" Language="zh-cn">可用坐标</Run>
+                        <LineBreak/>
+                        <Run Language="zh-cn" Foreground="#FF373737">导出可以使用的坐标</Run>
+                    </TextBlock>
+                </Grid>
+            </Button>
             <StackPanel Grid.Row="1" VerticalAlignment="Bottom" Margin="0,0,0,32">
-                <Button Content="提 交" Margin="5,0" Click="click_submit"/>
-                <Button Content="搜 索" Margin="5,17,5,0" Click="click_search"/>
+                <Button Margin="5,0" Click="click_submit" HorizontalContentAlignment="Left" Padding="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="5*"/>
+                        </Grid.ColumnDefinitions>
+                        <ContentControl Template="{StaticResource bt_submit}" Margin="3,3,0,3" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Margin="5,0,0,0">
+                            <Run FontSize="16" Language="zh-cn">提 交</Run>
+                            <LineBreak/>
+                            <Run Language="zh-cn" Foreground="#FF373737">提交所有更改</Run>
+                        </TextBlock>
+                    </Grid>
+                </Button>
+                <Button Margin="5,17,5,0" Click="click_search" HorizontalContentAlignment="Left" Padding="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="5*"/>
+                        </Grid.ColumnDefinitions>
+                        <ContentControl Template="{StaticResource bt_search}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,3,0,3"/>
+                        <TextBlock Grid.Column="1" Margin="5,0,0,0">
+                            <Run FontSize="16" Language="zh-cn">搜 索</Run>
+                            <LineBreak/>
+                            <Run Language="zh-cn" Foreground="#FF373737">在所有数据中搜索</Run>
+                        </TextBlock>
+                    </Grid>
+                </Button>
             </StackPanel>
         </Grid>
-        <StatusBar Grid.RowSpan="2" Grid.Row="2" Grid.ColumnSpan="2" Background="#FF007ACC">
+        <StatusBar x:Name="st_bar" Grid.RowSpan="2" Grid.Row="2" Grid.ColumnSpan="2" Background="#FF007ACC">
             <StatusBarItem Margin="5,0,0,0">
                 <TextBlock x:Name="st_tbstate" Text="就绪" Foreground="White"/>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right" Margin="0,0,5,0">
-                <TextBlock x:Name="st_tbcount" Text="21条" Foreground="White"/>
+                <TextBlock x:Name="st_tbcount" Foreground="White"/>
             </StatusBarItem>
         </StatusBar>
     </Grid>

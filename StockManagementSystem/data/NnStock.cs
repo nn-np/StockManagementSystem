@@ -5,13 +5,14 @@ using System.Linq;
  * crude为 -2，desalt为 -1
  * nnns
  */
-namespace StockManagementSystem.data
+namespace data
 {
     class NnStock
     {
         // -------属性------
         private double purity;// 纯度
         private double quality;// 质量（可能是需要的量，也可能时库存量）
+        private string coordinate;// 坐标
 
         public NnStock(string orderId, long workNo = -1)
         {
@@ -23,12 +24,13 @@ namespace StockManagementSystem.data
         public NnStock(string allInfo)
         {
             if (string.IsNullOrWhiteSpace(allInfo)) return;// TODO这里需要注意，如果allInfo为空具体怎么处理较好
+            allInfo = allInfo.TrimEnd() + " ";
             int i = 0, j = 0;
             int index = 0;
-            string[] values = new string[5];
-            while (index < 5)
+            string[] values = new string[6];
+            while (index < 6)
             {
-                i = allInfo.IndexOf('\t', j);
+                i = allInfo.IndexOf(" ", j);
                 if (i < 0) break;
                 values[index++] = allInfo.Substring(j, i - j);
                 j = i + 1;
@@ -38,9 +40,10 @@ namespace StockManagementSystem.data
             QualitySum = values[2];
             Cause = values[3];
             Coordinate = values[4];
+            PurityString = values[5];
         }
 
-        public string OrderId { get => OrderId; set => OrderId = (value ?? "").Contains('-') ? value : ""; }
+        public string OrderId { get; set; }
         public long WorkNo { get; set; }// workNo
         public string WorkNoStr
         {
@@ -58,8 +61,8 @@ namespace StockManagementSystem.data
         public string QualityString { get => $"{quality}mg"; set => quality = getMaxValue(value); }// 这个是得到字符串中的最大值作为质量
         public string QualitySum { get => $"{quality}"; set => quality = getSumValue(value); }// 这个是得到字符串中数字的和作为质量
 
-        // 判断一条数据是否有效，需要它的OrderId或者WOrkNo不为空（两者有其一就行），同时必须要有坐标或者原因（两者必须有其一）
-        public bool IsAvailable { get => (!string.IsNullOrWhiteSpace(OrderId) || WorkNo > 0) && (!string.IsNullOrWhiteSpace(Coordinate) || !string.IsNullOrWhiteSpace(Cause)); }
+        // 判断一条数据是否有效，必须要有坐标，如果没有原因，则必须要有orderId或者workNo二者之一
+        public bool IsAvailable { get => string.IsNullOrEmpty(Cause) ? ((OrderId ?? "").Contains('-') || WorkNo > 0) && (Coordinate ?? "").Contains('-') : (Coordinate ?? "").Contains('-'); }
 
         public double Purity { get => purity; set => purity = value; }
         public string PurityString
@@ -82,7 +85,7 @@ namespace StockManagementSystem.data
             }
         }
         // 坐标
-        public string Coordinate { get => Coordinate; set => Coordinate = (value ?? "").Contains('-') ? value : ""; }
+        public string Coordinate { get => coordinate; set => coordinate = (value ?? "").ToUpper(); }
 
         // 添加日期
         public DateTime DateAdd { get; set; }
