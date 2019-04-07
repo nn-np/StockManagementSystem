@@ -184,19 +184,11 @@ namespace data
         /// <returns></returns>
         public int Submit(NnStock stock)
         {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(stock.Cause))
-                {// 添加
-                    return _addIntoDatabase(stock);
-                }
-                else
-                {// 移除
-                    return _removeFromDatabase(stock);
-                }
-            }
-            catch { }
-            return 0;
+            // 添加
+            if (string.IsNullOrWhiteSpace(stock.Cause))
+                return _addIntoDatabase(stock);
+            else// 移除
+                return _removeFromDatabase(stock);
         }
 
         // 加入数据库
@@ -353,7 +345,7 @@ namespace data
                 else
                 {
                     if (ShowMessage != null)
-                        ShowMessage("数据库连接错误！", true);
+                        ShowMessage("数据库连接错误！建议检查数据库文件是否被改动。", true);
                     IsValid = false;
                     return;
                 }

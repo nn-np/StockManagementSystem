@@ -33,16 +33,20 @@
             <ContentControl Template="{StaticResource bt_close}"/>
         </Button>
 
-        <Grid Grid.Column="1">
+        <Grid Grid.ColumnSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="3*"/>
                 <RowDefinition Height="2*"/>
             </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
 
-            <TextBlock/>
-            <TextBlock Grid.Row="1"/>
+            <TextBlock x:Name="tb_top" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,12" FontSize="16"/>
+            <TextBlock x:Name="tb_center" Grid.Column="1" Grid.Row="1" Margin="7,0" Foreground="#FF373737" TextWrapping="Wrap"/>
         </Grid>
 
-        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="0,0,20,0" VerticalAlignment="Center" Text="nnns"/>
+        <TextBlock Grid.Row="2" x:Name="tb_bottom" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="0,0,20,0" VerticalAlignment="Center" Text="nnns"/>
     </Grid>
 </Window>

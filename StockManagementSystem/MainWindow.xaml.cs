@@ -33,18 +33,11 @@ namespace StockManagementSystem
             InitializeComponent();
             new Thread(init).Start();// 开始初始化
             _statusBarState("正在初始化...", true);
-
-            test();
         }
 
-        private void test()
+        private void _showMessage(string message,bool isError = false)
         {
-            NnMessage nn = new NnMessage();
-            nn.Show();
-        }
-
-        private void _showMessage(string message,bool isWarning)
-        {
+            this.Dispatcher.Invoke(() => new NnMessage(message, isError).Show());
             Console.WriteLine(message);
         }
 
@@ -68,6 +61,13 @@ namespace StockManagementSystem
         private void click_search(object sender, RoutedEventArgs e)
         {
             submitStr = m_tb.Text;
+            if (string.IsNullOrWhiteSpace(submitStr))
+                return;
+            if (!m_manager.IsValid)
+            {
+                _showMessage("程序初始化失败，无法搜索！", false);
+                return;
+            }
             submitStr += submitStr.EndsWith("\n") ? "" : "\n";
             new Thread(_search).Start();
             _statusBarState("正在搜索...", true);
@@ -78,7 +78,6 @@ namespace StockManagementSystem
             string str = m_manager.Search(submitStr);
             submitStr = "";
             this.Dispatcher.Invoke(new TextBoxUpdate(_textBoxUpdate), "\n\n------------\n"+str);
-            Action<string, bool> action = new Action<string, bool>(_statusBarState);
             this.Dispatcher.Invoke(new StatusBarUpdate(_statusBarState), "就绪", false);
         }
 
@@ -88,7 +87,12 @@ namespace StockManagementSystem
             submitStr = m_tb.Text;
             if (string.IsNullOrWhiteSpace(submitStr))
             {
-                _showMessage("提交数据不能为空！", false);
+                _showMessage("提交数据为空！", false);
+                return;
+            }
+            if (!m_manager.IsValid)
+            {
+                _showMessage("程序初始化失败，无法提交！", false);
                 return;
             }
             submitStr += submitStr.EndsWith("\n") ? "" : "\n";
@@ -129,11 +133,10 @@ namespace StockManagementSystem
             }
             this.Dispatcher.Invoke(update, $"--------------\n总计/成功/失败  {counts - 1}/{successcount}/{counts - successcount - 1}（条） nnns\n");
             submitStr = "";
-            Action<string, bool> action = new Action<string, bool>(_statusBarState);
             this.Dispatcher.Invoke(new StatusBarUpdate(_statusBarState), "就绪", false);
         }
         // 更新状态栏
-        delegate void StatusBarUpdate(string value, bool isWarning);
+        delegate void StatusBarUpdate(string value, bool isError);
         // 更新主textBox
         delegate void TextBoxUpdate(string value);
         private void _statusBarState(string value,bool isWarning)
@@ -152,6 +155,11 @@ namespace StockManagementSystem
         // 导出坐标按钮
         private void click_coordinate(object sender, RoutedEventArgs e)
         {
+            if (!m_manager.IsValid)
+            {
+                _showMessage("程序初始化失败，无法导出！", false);
+                return;
+            }
             new Thread(m_manager.OutputCoordinate).Start();
         }
 
