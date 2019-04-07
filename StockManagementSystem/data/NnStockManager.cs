@@ -17,7 +17,6 @@ namespace data
     {
         private OleDbConnection m_connection;// 数据库
         private Configuration m_configuration;// 配置文件读写
-        private NnConnection m_netconnecton;// 网络连接，用于获取配置信息
         private StreamWriter m_writer;// 用于写入数据到文件
         string m_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\nnns\";
 
@@ -357,9 +356,7 @@ namespace data
         {
             try
             {
-                if (m_netconnecton == null)
-                    m_netconnecton = new NnConnection();
-                string result = m_netconnecton.GetString(v);
+                string result = NnConnection.GetString(v);
                 if (result == null) return null;
                 if (m_configuration.AppSettings.Settings[v] == null)
                     m_configuration.AppSettings.Settings.Add(v, result);
@@ -368,17 +365,12 @@ namespace data
                 m_configuration.Save();
                 return result;
             }
-            catch { return null; }
+            catch { Console.WriteLine("获取网络数据错误"); return null; }
         }
 
         ~NnStockManager()
         {
             _deleteOtherFile();
-            try
-            {
-                m_netconnecton.Close();
-            }
-            catch { }
             try
             {
                 m_connection.Dispose();

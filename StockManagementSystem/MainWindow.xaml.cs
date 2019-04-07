@@ -61,11 +61,11 @@ namespace StockManagementSystem
         private void click_search(object sender, RoutedEventArgs e)
         {
             submitStr = m_tb.Text;
-            if (string.IsNullOrWhiteSpace(submitStr))
+            if (m_manager == null || string.IsNullOrWhiteSpace(submitStr))
                 return;
             if (!m_manager.IsValid)
             {
-                _showMessage("程序初始化失败，无法搜索！", false);
+                _showMessage("初始化失败，无法搜索！", false);
                 return;
             }
             submitStr += submitStr.EndsWith("\n") ? "" : "\n";
@@ -84,6 +84,7 @@ namespace StockManagementSystem
         // 提交库存按钮
         private void click_submit(object sender, RoutedEventArgs e)
         {
+            if (m_manager == null) return;
             submitStr = m_tb.Text;
             if (string.IsNullOrWhiteSpace(submitStr))
             {
@@ -92,7 +93,7 @@ namespace StockManagementSystem
             }
             if (!m_manager.IsValid)
             {
-                _showMessage("程序初始化失败，无法提交！", false);
+                _showMessage("初始化失败，无法提交！", false);
                 return;
             }
             submitStr += submitStr.EndsWith("\n") ? "" : "\n";
@@ -155,9 +156,10 @@ namespace StockManagementSystem
         // 导出坐标按钮
         private void click_coordinate(object sender, RoutedEventArgs e)
         {
+            if (m_manager == null) return;
             if (!m_manager.IsValid)
             {
-                _showMessage("程序初始化失败，无法导出！", false);
+                _showMessage("初始化失败，无法导出！", false);
                 return;
             }
             new Thread(m_manager.OutputCoordinate).Start();
