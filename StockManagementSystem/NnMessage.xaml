@@ -5,8 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:StockManagementSystem"
         mc:Ignorable="d"
-        Title="NnMessage" Height="127" Width="320" ShowInTaskbar="False" AllowsTransparency="True" WindowStyle="None" Background="#00000000">
-    
+        BorderThickness="7"
+        Title="NnMessage" Height="139" Width="332" ShowInTaskbar="False" AllowsTransparency="True" WindowStyle="None" Background="#00000000" Topmost="True" Loaded="window_loaded">
+
+    <Window.Effect>
+        <DropShadowEffect ShadowDepth="7" BlurRadius="7"/>
+    </Window.Effect>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="3*"/>
@@ -17,10 +22,27 @@
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="3*"/>
         </Grid.ColumnDefinitions>
-        <Border Grid.RowSpan="3" Grid.ColumnSpan="2" CornerRadius="12" Background="White"/>
+        <Border Grid.RowSpan="3" Grid.ColumnSpan="2" CornerRadius="12" Background="#FFFBFBFB"/>
+        <Image Source="res/m_ic.ico" Margin="20" VerticalAlignment="Bottom">
+            <Image.Effect>
+                <DropShadowEffect/>
+            </Image.Effect>
+        </Image>
         <Border Grid.Row="1" Grid.ColumnSpan="2" Background="#FF212121"/>
-        <Button Grid.ColumnSpan="2" Style="{DynamicResource ButtonStyleClose}" Width="24" Height="24" Padding="4" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2" Click="btclose_click">
+        <Button Grid.ColumnSpan="2" Style="{DynamicResource ButtonStyleClose}" Width="24" Height="24" Padding="6" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2" Click="btclose_click">
             <ContentControl Template="{StaticResource bt_close}"/>
         </Button>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="3*"/>
+                <RowDefinition Height="2*"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock/>
+            <TextBlock Grid.Row="1"/>
+        </Grid>
+
+        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="0,0,20,0" VerticalAlignment="Center" Text="nnns"/>
     </Grid>
 </Window>

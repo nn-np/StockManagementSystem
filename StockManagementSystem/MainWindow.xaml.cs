@@ -25,7 +25,6 @@ namespace StockManagementSystem
     // <!--#FFCA5100 #FF007ACC-->
     public partial class MainWindow : Window
     {
-        private Regex m_regex = new Regex(@"\n");// 用于检测TextBox中的行数
         private NnStockManager m_manager;
         private NnConnection m_connection;
         private string submitStr;// 用于提交或者搜索的字符串
@@ -78,7 +77,6 @@ namespace StockManagementSystem
         {
             string str = m_manager.Search(submitStr);
             submitStr = "";
-            Action<string> textbox_action = new Action<string>(_textBoxUpdate);
             this.Dispatcher.Invoke(new TextBoxUpdate(_textBoxUpdate), "\n\n------------\n"+str);
             Action<string, bool> action = new Action<string, bool>(_statusBarState);
             this.Dispatcher.Invoke(new StatusBarUpdate(_statusBarState), "就绪", false);
@@ -100,7 +98,6 @@ namespace StockManagementSystem
 
         private void _submit()
         {
-            Action<string> textbox_action = new Action<string>(_textBoxUpdate);
             TextBoxUpdate update = new TextBoxUpdate(_textBoxUpdate);
             this.Dispatcher.Invoke(update, "\n\n--------------\n");
             int i = 0, j = 0;

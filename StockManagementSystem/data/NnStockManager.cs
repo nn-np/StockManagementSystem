@@ -21,6 +21,8 @@ namespace data
         private StreamWriter m_writer;// 用于写入数据到文件
         string m_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\nnns\";
 
+        private int initcount = 0;
+
         //弹出通知窗口（通知窗口有两种，一种自动消失（表示提示,isWarning为false），一种需要手动关闭（表示信息重要，必须引起客户重视，isWarning为true））
         public delegate void NnShowMessage(string message, bool isWarning);
 
@@ -34,7 +36,7 @@ namespace data
         public NnStockManager(NnShowMessage nnShow)
         {
             ShowMessage += nnShow;
-            inti();
+            init();
         }
 
         /// <summary>
@@ -112,7 +114,7 @@ namespace data
 
         private void _getSearchString(string s, StringBuilder sb1, StringBuilder sb2)
         {
-            s = s.TrimEnd();
+            s = s.Trim();
             if (s.Contains('-'))// 如果是orderId或者坐标
             {
                 if (s.IndexOf('-') < 7)// 通常认为坐标前缀小于7
@@ -278,7 +280,7 @@ namespace data
         {
             StringBuilder buder = new StringBuilder();
             bool isInserted = false;
-            int i = 0, j = 0;
+            int i, j = 0;
             while (true)
             {
                 i = v.IndexOf(',', j);
@@ -317,11 +319,14 @@ namespace data
             }
         }
 
-        private void inti()
+        private void init()
         {
+            ++initcount;
+            IsValid = true;
             m_configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             string connectionStr = null;
-            if (m_configuration.AppSettings.Settings["stock_connection"] != null)
+            // 如果第一次初始化失败，第二次初始化时直接从网络获取数据库连接字符串
+            if (initcount < 2 && m_configuration.AppSettings.Settings["stock_connection"] != null)
             {
                 connectionStr = m_configuration.AppSettings.Settings["stock_connection"].Value;
             }
@@ -343,12 +348,16 @@ namespace data
             }
             catch
             {
-                if (ShowMessage != null)
-                    ShowMessage("数据库连接错误！", true);
-                IsValid = false;
-                return;
+                if (initcount < 2)
+                    init();
+                else
+                {
+                    if (ShowMessage != null)
+                        ShowMessage("数据库连接错误！", true);
+                    IsValid = false;
+                    return;
+                }
             }
-            IsValid = true;
         }
 
         // 从网络获取配置信息
