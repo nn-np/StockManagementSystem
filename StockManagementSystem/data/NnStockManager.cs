@@ -77,7 +77,7 @@ namespace data
         {
             try
             {
-                string path = m_path + DateTime.Now.ToBinary() + ".csv";
+                string path = m_path + DateTime.Now.Ticks + ".csv";
                 DirectoryInfo dir = new DirectoryInfo(m_path);
                 if (!dir.Exists) dir.Create();
                 m_writer = new StreamWriter(path, false, Encoding.UTF8);
@@ -96,8 +96,8 @@ namespace data
         {
             StringBuilder sb1 = new StringBuilder();
             StringBuilder sb2 = new StringBuilder();
-            sb1.Append("AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,\n");
-            sb2.Append("\n\n已被移除项目：\nAddDate,RemoveDate,WorkNo,OrderID,Qualit,Purity,Cause,\n");
+            sb1.Append("KeyWord,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,mw,\n");
+            sb2.Append("\n\n已被移除项目：\nKeyWord,RemoveDate,AddDate,WorkNo,OrderID,Qualit,Purity,Mw,Cause,\n");
             int i = str.IndexOf('\n'), j = 0;
             while (i > 0)
             {
@@ -114,22 +114,19 @@ namespace data
         private void _getSearchString(string s, StringBuilder sb1, StringBuilder sb2)
         {
             s = s.Trim();
-            if (s.Contains('-'))// 如果是orderId或者坐标
-            {
-                if (s.IndexOf('-') < 7)// 通常认为坐标前缀小于7
-                {
-                    sb1.Append(_getStringFromCoordinate("'" + s + "'", "stock_new", "coordinate"));
-                }
-                else// orderId
-                {
-                    sb1.Append(_getStringFromCoordinate("'" + s + "'", "stock_new", "orderId"));
-                    sb2.Append(_getStringFromCoordinate("'" + s + "'", "stock_old", "orderId"));
-                }
-            }
-            else// 如果是workNo（这里不做检查，不是orderId或坐标的都认为是workNo）
+            int flg = s.IndexOf('-');// flg小于0则认为是workNo，在(0,6]之间为坐标，大于6为OrderId
+            if (flg < 0)// 如果是workNo
             {
                 sb1.Append(_getStringFromCoordinate(s, "stock_new", "workNo"));
                 sb2.Append(_getStringFromCoordinate(s, "stock_old", "workNo"));
+            }else if (flg < 7)// 如果是坐标
+            {
+                sb1.Append(_getStringFromCoordinate("'" + s + "'", "stock_new", "coordinate"));
+            }
+            else// 如果是orderId
+            {
+                sb1.Append(_getStringFromCoordinate("'" + s + "'", "stock_new", "orderId"));
+                sb2.Append(_getStringFromCoordinate("'" + s + "'", "stock_old", "orderId"));
             }
         }
 
@@ -144,16 +141,7 @@ namespace data
                 {
                     while (reader.Read())
                     {
-                        if (isNew)
-                        {
-                            sb.Append(((DateTime)reader["_date"]).ToShortDateString()).Append(',').Append(reader["workNo"]).Append(',').Append(reader["orderId"]).Append(',')
-                                .Append(reader["quality"]).Append(',').Append(reader["coordinate"]).Append(',').Append(reader["purity"]).Append(",\n");
-                        }
-                        else
-                        {
-                            sb.Append(((DateTime)reader["dateAdd"]).ToShortDateString()).Append(',').Append(((DateTime)reader["dateRemove"]).ToShortDateString()).Append(',').Append(reader["workNo"]).Append(',')
-                                .Append(reader["orderID"]).Append(',').Append(reader["quality"]).Append(',').Append(reader["purity"]).Append(',').Append(reader["cause"]).Append(",\n");
-                        }
+                        sb.Append(s).Append(',').Append(_getNnStcokFromReader(reader, isNew).ToString()).Append("\n");
                     }
                 }
             }
@@ -161,6 +149,28 @@ namespace data
             return sb.ToString();
         }
 
+        private NnStock _getNnStcokFromReader(OleDbDataReader reader,bool isNew)
+        {
+            NnStock stock = new NnStock();
+            try
+            {
+                stock.OrderId = reader["orderId"] as string;
+                stock.WorkNo = (long)reader["workNo"];
+                stock.Quality = (double)reader["quality"];
+                stock.Coordinate = reader["coordinate"] as string;
+                stock.Purity = (double)reader["purity"];
+                if (isNew)
+                    stock.DateAdd = (DateTime)reader["_date"];
+                else
+                {
+                    stock.DateAdd = (DateTime)reader["dateAdd"];
+                    stock.DateRemove = (DateTime)reader["dateRemove"];
+                }
+                stock.Mw = (double)reader["mw"];
+            }
+            catch { }
+            return stock;
+        }
 
         // 删除自己创建的无用文件
         private void _deleteOtherFile()

@@ -11,10 +11,11 @@ namespace data
     {
         // -------属性------
         private double purity;// 纯度
-        private double quality;// 质量（可能是需要的量，也可能时库存量）
+        private double quality;// 质量
+        private double mw;// 分子量
         private string coordinate;// 坐标
 
-        public NnStock(string orderId, long workNo = -1)
+        public NnStock(string orderId = "", long workNo = -1)
         {
             this.OrderId = orderId;
             this.WorkNo = workNo;
@@ -27,13 +28,13 @@ namespace data
             allInfo = allInfo.TrimEnd() + " ";
             int i = 0, j = 0;
             int index = 0;
-            string[] values = new string[6];
-            while (index < 6)
+            string[] values = new string[7];
+            i = allInfo.IndexOf(" ");
+            while (i > 0 && index < 7)
             {
-                i = allInfo.IndexOf(" ", j);
-                if (i < 0) break;
                 values[index++] = allInfo.Substring(j, i - j);
                 j = i + 1;
+                i = allInfo.IndexOf(" ", j);
             }
             WorkNoStr = values[0];
             OrderId = values[1];
@@ -41,11 +42,12 @@ namespace data
             Cause = values[3];
             Coordinate = values[4];
             PurityString = values[5];
+            MwString = values[6];
         }
 
         public string OrderId { get; set; }
         public long WorkNo { get; set; }// workNo
-        public string WorkNoStr
+        public string WorkNoString
         {
             get => WorkNo.ToString();
             set
@@ -60,6 +62,11 @@ namespace data
         public double Quality { get => quality; set => quality = value; }
         public string QualityString { get => $"{quality}mg"; set => quality = getMaxValue(value); }// 这个是得到字符串中的最大值作为质量
         public string QualitySum { get => $"{quality}"; set => quality = getSumValue(value); }// 这个是得到字符串中数字的和作为质量
+
+        // 分子量
+        public double Mw { get => mw; set => mw = value; }
+
+        public string MwString { get => mw.ToString(); set => mw = getMaxValue(value); }
 
         // 判断一条数据是否有效，必须要有坐标，如果没有原因，则必须要有orderId或者workNo二者之一
         public bool IsAvailable { get => string.IsNullOrEmpty(Cause) ? ((OrderId ?? "").Contains('-') || WorkNo > 0) && (Coordinate ?? "").Contains('-') : (Coordinate ?? "").Contains('-'); }
@@ -95,6 +102,11 @@ namespace data
 
         // 原因
         public string Cause { get; set; }
+
+        public override string ToString()
+        {
+            return $"{WorkNo},{OrderId},{QualityString},{Cause},{Coordinate},{PurityString},{MwString},";
+        }
 
         // -------方法-------
         // 获取字符串中所有数字的和
