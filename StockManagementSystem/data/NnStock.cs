@@ -32,11 +32,11 @@ namespace data
             i = allInfo.IndexOf(" ");
             while (i > 0 && index < 7)
             {
-                values[index++] = allInfo.Substring(j, i - j);
+                values[index++] = allInfo.Substring(j, i - j).Trim();
                 j = i + 1;
                 i = allInfo.IndexOf(" ", j);
             }
-            WorkNoStr = values[0];
+            WorkNoString = values[0];
             OrderId = values[1];
             QualitySum = values[2];
             Cause = values[3];
@@ -105,7 +105,7 @@ namespace data
 
         public override string ToString()
         {
-            return $"{WorkNo},{OrderId},{QualityString},{Cause},{Coordinate},{PurityString},{MwString},";
+            return $"{DateAdd.ToShortDateString()},{WorkNo},{OrderId},{QualityString},{Coordinate},{PurityString},{MwString},";
         }
 
         // -------方法-------

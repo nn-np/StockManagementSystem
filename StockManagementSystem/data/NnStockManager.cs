@@ -39,6 +39,11 @@ namespace data
         }
 
         /// <summary>
+        /// 数据库文件所在路径
+        /// </summary>
+        public string DatabasePath { get; set; }
+
+        /// <summary>
         /// 导出所有的可用坐标
         /// </summary>
         /// <returns></returns>
@@ -96,8 +101,9 @@ namespace data
         {
             StringBuilder sb1 = new StringBuilder();
             StringBuilder sb2 = new StringBuilder();
-            sb1.Append("KeyWord,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,mw,\n");
-            sb2.Append("\n\n已被移除项目：\nKeyWord,RemoveDate,AddDate,WorkNo,OrderID,Qualit,Purity,Mw,Cause,\n");
+            sb1.Append("KeyWord,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,\n");
+            sb2.Append("\n\n已被移除项目：\nKeyWord,RemoveDate,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,Cause,\n");
+            str += str.EndsWith("\n") ? "" : "\n";
             int i = str.IndexOf('\n'), j = 0;
             while (i > 0)
             {
@@ -141,32 +147,64 @@ namespace data
                 {
                     while (reader.Read())
                     {
-                        sb.Append(s).Append(',').Append(_getNnStcokFromReader(reader, isNew).ToString()).Append("\n");
+                        NnStock stock = _getNnStcokFromReader(reader, isNew);
+                        sb.Append(s.Replace("'", "")).Append(',');
+                        if (!isNew)
+                            sb.Append(stock.DateRemove.ToShortDateString()).Append(',');
+                        sb.Append(stock.ToString());
+                        if (!isNew)
+                            sb.Append(stock.Cause).Append(',');
+                        sb.Append("\n");
                     }
                 }
             }
             catch { }
+            if (isNew && sb.Length < 2) sb.Append(s).Append(",,无记录！,").Append('\n');// 如果没有记录则添加提示字段
             return sb.ToString();
         }
 
         private NnStock _getNnStcokFromReader(OleDbDataReader reader,bool isNew)
         {
             NnStock stock = new NnStock();
+            int ordinal;
             try
             {
-                stock.OrderId = reader["orderId"] as string;
-                stock.WorkNo = (long)reader["workNo"];
-                stock.Quality = (double)reader["quality"];
-                stock.Coordinate = reader["coordinate"] as string;
-                stock.Purity = (double)reader["purity"];
+                ordinal = reader.GetOrdinal("orderId");
+                if (!reader.IsDBNull(ordinal))
+                    stock.OrderId = reader.GetString(ordinal);
+                ordinal = reader.GetOrdinal("workNo");
+                if (!reader.IsDBNull(ordinal))
+                    stock.WorkNo = reader.GetInt32(ordinal);
+                ordinal = reader.GetOrdinal("quality");
+                if (!reader.IsDBNull(ordinal))
+                    stock.Quality = reader.GetDouble(ordinal);
+                ordinal = reader.GetOrdinal("purity");
+                if (!reader.IsDBNull(ordinal))
+                    stock.Purity = reader.GetDouble(ordinal);
+                ordinal = reader.GetOrdinal("mw");
+                if (!reader.IsDBNull(ordinal))
+                    stock.Mw = (double)reader["mw"];
                 if (isNew)
-                    stock.DateAdd = (DateTime)reader["_date"];
+                {
+                    ordinal = reader.GetOrdinal("_date");
+                    if (!reader.IsDBNull(ordinal))
+                        stock.DateAdd = reader.GetDateTime(ordinal);
+                    ordinal = reader.GetOrdinal("coordinate");
+                    if (!reader.IsDBNull(ordinal))
+                        stock.Coordinate = reader.GetString(ordinal);
+                }
                 else
                 {
-                    stock.DateAdd = (DateTime)reader["dateAdd"];
-                    stock.DateRemove = (DateTime)reader["dateRemove"];
+                    ordinal = reader.GetOrdinal("dateAdd");
+                    if (!reader.IsDBNull(ordinal))
+                        stock.DateAdd = reader.GetDateTime(ordinal);
+                    ordinal = reader.GetOrdinal("dateRemove");
+                    if (!reader.IsDBNull(ordinal))
+                        stock.DateRemove = reader.GetDateTime(ordinal);
+                    ordinal = reader.GetOrdinal("cause");
+                    if (!reader.IsDBNull(ordinal))
+                        stock.Cause = reader.GetString(ordinal);
                 }
-                stock.Mw = (double)reader["mw"];
             }
             catch { }
             return stock;
@@ -203,8 +241,8 @@ namespace data
         // 加入数据库
         private int _addIntoDatabase(NnStock stock)
         {
-            string sql = $"insert into stock_new ([_date],workNo,orderId,quality,coordinate,purity) " +
-                $"values('{DateTime.Now}',{stock.WorkNo},'{stock.OrderId}',{stock.Quality},'{stock.Coordinate}',{stock.Purity})";
+            string sql = $"insert into stock_new ([_date],workNo,orderId,quality,coordinate,purity,mw) " +
+                $"values('{DateTime.Now}',{stock.WorkNo},'{stock.OrderId}',{stock.Quality},'{stock.Coordinate}',{stock.Purity},{stock.Mw})";
             int count = 0;
             try
             {
@@ -226,8 +264,8 @@ namespace data
                 {
                     if (reader.Read())
                     {
-                        sql = $"insert into stock_old (dateAdd,dateRemove,workNo,orderId,quality,purity,cause) " +
-                            $"values('{reader["_date"]}','{DateTime.Now}',{reader["workNo"]},'{reader["orderId"]}',{reader["quality"]},{reader["purity"]},'{stock.Cause}')";
+                        sql = $"insert into stock_old (dateAdd,dateRemove,workNo,orderId,quality,purity,mw,cause) " +
+                            $"values('{reader["_date"]}','{DateTime.Now}',{reader["workNo"]},'{reader["orderId"]}',{reader["quality"]},{reader["purity"]},{reader["mw"]},'{stock.Cause}')";
 
                         count = _exeCuteNonQuery(sql);
                         if (count > 0)
@@ -346,6 +384,10 @@ namespace data
             {
                 m_connection = new OleDbConnection(connectionStr);
                 m_connection.Open();
+                int i = connectionStr.IndexOf("Data Source=") + 12;
+                int len = connectionStr.IndexOf(";", i) - i;
+                len = len > 0 ? len : connectionStr.Length - i;
+                DatabasePath = connectionStr.Substring(i, len);
             }
             catch
             {

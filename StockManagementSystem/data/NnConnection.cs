@@ -22,7 +22,6 @@ namespace data
             byte[] buffer = new byte[1024];
             client.Client.Send(Encoding.Default.GetBytes(instructions));
             int len = client.Client.Receive(buffer);
-            client.Dispose();
             client.Close();
             return Encoding.Default.GetString(buffer, 0, len);
         }

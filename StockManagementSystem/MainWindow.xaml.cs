@@ -1,6 +1,7 @@
 ﻿using data;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -46,10 +47,10 @@ namespace StockManagementSystem
             m_manager = new NnStockManager(_showMessage);
             if (!m_manager.IsValid)
             {
-                this.Dispatcher.Invoke(new StatusBarUpdate(_statusBarState), "初始化失败！", true);
+                _statusBarState("初始化失败！", true);
                 return;
             }
-            this.Dispatcher.Invoke(new StatusBarUpdate(_statusBarState), "就绪", false);
+            _statusBarState("就绪", false);
             try
             {
                 m_connection = new NnConnection();
@@ -78,7 +79,7 @@ namespace StockManagementSystem
             string str = m_manager.Search(submitStr);
             submitStr = "";
             this.Dispatcher.Invoke(new TextBoxUpdate(_textBoxUpdate), "\n\n------------\n"+str);
-            this.Dispatcher.Invoke(new StatusBarUpdate(_statusBarState), "就绪", false);
+            _statusBarState("就绪", false);
         }
 
         // 提交库存按钮
@@ -134,17 +135,79 @@ namespace StockManagementSystem
             }
             this.Dispatcher.Invoke(update, $"--------------\n总计/成功/失败  {counts - 1}/{successcount}/{counts - successcount - 1}（条） nnns\n");
             submitStr = "";
-            this.Dispatcher.Invoke(new StatusBarUpdate(_statusBarState), "就绪", false);
+            _statusBarState("就绪", false);
+
+            // 每次更新结束后检查是否需要备份数据库
+            _checkBackup();
         }
-        // 更新状态栏
-        delegate void StatusBarUpdate(string value, bool isError);
+
+        private void _checkBackup()
+        {
+            Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            if (configuration.AppSettings.Settings["backuptime"] != null)
+            {
+                DateTime bktime;
+                if(DateTime.TryParse(configuration.AppSettings.Settings["backuptime"].Value,out bktime))
+                {
+                    if (_daySpan(bktime, DateTime.Now) < 1)
+                        return;
+                }
+            }
+            new Thread(() =>
+            {
+                try
+                {
+                    string path = Environment.CurrentDirectory + @"\" + DateTime.Now.Ticks + ".nnbkp";
+                    File.Copy(m_manager.DatabasePath, path);
+                    if (configuration.AppSettings.Settings["backuptime"] == null)
+                        configuration.AppSettings.Settings.Add("backuptime", DateTime.Now.ToString());
+                    else
+                        configuration.AppSettings.Settings["backuptime"].Value = DateTime.Now.ToString();
+                    configuration.Save();
+                    DirectoryInfo info = new DirectoryInfo(Environment.CurrentDirectory);
+                    foreach (FileInfo finfo in info.GetFiles())
+                    {
+                        if (finfo.Extension == ".nnbkp")
+                        {
+                            long ticks;
+                            if (!long.TryParse(System.IO.Path.GetFileNameWithoutExtension(finfo.Name), out ticks))
+                                continue;
+                            DateTime tm = new DateTime(ticks);
+                            if (_daySpan(tm, DateTime.Now) > 7)
+                            {
+                                try
+                                {
+                                    finfo.Delete();
+                                }
+                                catch { }
+                            }
+                        }
+                    }
+
+                    _showMessage("数据已备份！", false);
+                }
+                catch { }
+            }).Start();
+        }
+
+        private int _daySpan(DateTime t1,DateTime t2)
+        {
+            TimeSpan ts1 = new TimeSpan(t1.Ticks);
+            TimeSpan ts2 = new TimeSpan(t2.Ticks);
+            TimeSpan t = ts2.Subtract(ts1).Duration();
+            return t.Days;
+        }
+        
         // 更新主textBox
         delegate void TextBoxUpdate(string value);
         private void _statusBarState(string value,bool isWarning)
         {
-            st_tbstate.Text = value;
-            st_bar.Background = isWarning ? new SolidColorBrush(Color.FromRgb(0xCA, 0x51, 0x00))
-                : new SolidColorBrush(Color.FromRgb(0x00, 0x7A, 0xCC));
+            this.Dispatcher.Invoke(() =>
+            {
+                st_tbstate.Text = value;
+                st_bar.Background = isWarning ? new SolidColorBrush(Color.FromRgb(0xCA, 0x51, 0x00))
+                    : new SolidColorBrush(Color.FromRgb(0x00, 0x7A, 0xCC));
+            });
         }
 
         private void _textBoxUpdate(string value)
