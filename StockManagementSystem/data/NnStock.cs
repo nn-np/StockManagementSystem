@@ -25,14 +25,14 @@ namespace data
         public NnStock(string allInfo)
         {
             if (string.IsNullOrWhiteSpace(allInfo)) return;// TODO这里需要注意，如果allInfo为空具体怎么处理较好
-            allInfo = allInfo.TrimEnd() + " ";
-            int i = 0, j = 0;
+            allInfo = (allInfo.TrimEnd() + " ").Replace('\t', ' ');
+            int j = 0;
             int index = 0;
             string[] values = new string[7];
-            i = allInfo.IndexOf(" ");
-            while (i > 0 && index < 7)
+            int i = allInfo.IndexOf(" ");
+            while (i >= 0 && index < 7)
             {
-                values[index++] = allInfo.Substring(j, i - j).Trim();
+                values[index++] = allInfo.Substring(j, i - j);
                 j = i + 1;
                 i = allInfo.IndexOf(" ", j);
             }
@@ -69,7 +69,8 @@ namespace data
         public string MwString { get => mw.ToString(); set => mw = getMaxValue(value); }
 
         // 判断一条数据是否有效，必须要有坐标，如果没有原因，则必须要有orderId或者workNo二者之一
-        public bool IsAvailable { get => string.IsNullOrEmpty(Cause) ? ((OrderId ?? "").Contains('-') || WorkNo > 0) && (Coordinate ?? "").Contains('-') : (Coordinate ?? "").Contains('-'); }
+        public bool IsAvailable{ get => !string.IsNullOrWhiteSpace(Coordinate) && (!string.IsNullOrEmpty(Cause) || ((OrderId ?? "").Contains('-')) || WorkNo > 0); }
+        //public bool IsAvailable { get => string.IsNullOrEmpty(Cause) ? ((OrderId ?? "").Contains('-') || WorkNo > 0) && (Coordinate ?? "").Contains('-') : (Coordinate ?? "").Contains('-'); }
 
         public double Purity { get => purity; set => purity = value; }
         public string PurityString

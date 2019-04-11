@@ -159,7 +159,7 @@ namespace data
                 }
             }
             catch { }
-            if (isNew && sb.Length < 2) sb.Append(s).Append(",,无记录！,").Append('\n');// 如果没有记录则添加提示字段
+            if (isNew && sb.Length < 2) sb.Append(s.Replace("'", "")).Append(",,无记录！,").Append('\n');// 如果没有记录则添加提示字段
             return sb.ToString();
         }
 
@@ -264,8 +264,9 @@ namespace data
                 {
                     if (reader.Read())
                     {
+                        NnStock sk = _getNnStcokFromReader(reader, true);
                         sql = $"insert into stock_old (dateAdd,dateRemove,workNo,orderId,quality,purity,mw,cause) " +
-                            $"values('{reader["_date"]}','{DateTime.Now}',{reader["workNo"]},'{reader["orderId"]}',{reader["quality"]},{reader["purity"]},{reader["mw"]},'{stock.Cause}')";
+                            $"values('{sk.DateAdd}','{DateTime.Now}',{sk.WorkNo},'{sk.OrderId}',{sk.Quality},{sk.Purity},{sk.Mw},'{stock.Cause}')";
 
                         count = _exeCuteNonQuery(sql);
                         if (count > 0)

@@ -69,7 +69,6 @@ namespace StockManagementSystem
                 _showMessage("初始化失败，无法搜索！", false);
                 return;
             }
-            submitStr += submitStr.EndsWith("\n") ? "" : "\n";
             new Thread(_search).Start();
             _statusBarState("正在搜索...", true);
         }
