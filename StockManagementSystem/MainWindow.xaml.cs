@@ -145,9 +145,10 @@ namespace StockManagementSystem
             Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             if (configuration.AppSettings.Settings["backuptime"] != null)
             {
-                DateTime bktime;
-                if(DateTime.TryParse(configuration.AppSettings.Settings["backuptime"].Value,out bktime))
+                long ticks;
+                if(long.TryParse(configuration.AppSettings.Settings["backuptime"].Value,out ticks))
                 {
+                    DateTime bktime = new DateTime(ticks);
                     if (_daySpan(bktime, DateTime.Now) < 1)
                         return;
                 }
@@ -159,9 +160,9 @@ namespace StockManagementSystem
                     string path = Environment.CurrentDirectory + @"\" + DateTime.Now.Ticks + ".nnbkp";
                     File.Copy(m_manager.DatabasePath, path);
                     if (configuration.AppSettings.Settings["backuptime"] == null)
-                        configuration.AppSettings.Settings.Add("backuptime", DateTime.Now.ToString());
+                        configuration.AppSettings.Settings.Add("backuptime", DateTime.Now.Ticks.ToString());
                     else
-                        configuration.AppSettings.Settings["backuptime"].Value = DateTime.Now.ToString();
+                        configuration.AppSettings.Settings["backuptime"].Value = DateTime.Now.Ticks.ToString();
                     configuration.Save();
                     DirectoryInfo info = new DirectoryInfo(Environment.CurrentDirectory);
                     foreach (FileInfo finfo in info.GetFiles())
@@ -182,7 +183,6 @@ namespace StockManagementSystem
                             }
                         }
                     }
-
                     _showMessage("数据已备份！", false);
                 }
                 catch { }
