@@ -17,10 +17,10 @@
             <RowDefinition></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
-        <TextBlock Margin="12,12,0,7">
+        <TextBlock x:Name="mTBTitle" Margin="12,12,0,7">
             <Run FontSize="24" Language="zh-cn">多肽库存管理系统</Run>
             <LineBreak/>
-            <Run FontSize="16" FontWeight="Thin" Language="zh-cn">用于提交库存信息或输入OrderID、WorkNumber、Corrdinate进行搜索</Run>
+            <Run FontSize="16" FontWeight="Thin" Language="zh-cn">用于提交库存信息或输入OrderID、WorkNo或库存坐标进行搜索</Run>
         </TextBlock>
         <TextBox x:Name="m_tb" Grid.Row="1" TextWrapping="Wrap" Margin="5,5,0,5" AcceptsReturn="True" TextChanged="m_textcanged" MouseDoubleClick="tb_doubleclick"/>
         <Grid Grid.Column="1" Grid.Row="1" Margin="0,5,0,0" MinWidth="159">
@@ -43,7 +43,7 @@
                 </Grid>
             </Button>
             <StackPanel Grid.Row="1" VerticalAlignment="Bottom" Margin="0,0,0,32">
-                <Button Margin="5,0" Click="click_submit" HorizontalContentAlignment="Left" Padding="1">
+                <Button x:Name="mBTSubmit" Margin="5,0" Click="click_submit" HorizontalContentAlignment="Left" Padding="1">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="1*"/>

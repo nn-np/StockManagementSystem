@@ -1,0 +1,39 @@
+﻿<Page x:Class="StockManagementSystem.PageLogin"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:StockManagementSystem"
+      mc:Ignorable="d" 
+      d:DesignHeight="327" d:DesignWidth="290"
+      Title="UserLogin" x:Name="PateLogin">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="4*"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+        <TextBlock x:Name="mTBWorring" Foreground="#FFCA5100" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
+        <StackPanel VerticalAlignment="Top" Grid.Row="1">
+            <TextBlock Text="用户名："/>
+            <TextBox x:Name="userName" VerticalAlignment="Center" FontSize="16"/>
+            <TextBlock Text="密码：" Margin="0,12,0,0"/>
+            <PasswordBox x:Name="password" VerticalAlignment="Center" FontSize="16"/>
+        </StackPanel>
+        <Grid Grid.Row="2" VerticalAlignment="Center">
+            <CheckBox x:Name="isSkip" Content="记住我的选择" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+            <TextBlock VerticalAlignment="Center" Margin="50,0,0,0" HorizontalAlignment="Right">
+            <Hyperlink FontSize="15" Click="click_new">
+                <TextBlock>新建账号</TextBlock>
+            </Hyperlink>
+            <LineBreak/>
+            <Hyperlink  FontSize="14" Click="click_skip">
+                <TextBlock HorizontalAlignment="Right">跳过</TextBlock>
+            </Hyperlink>
+        </TextBlock>
+        </Grid>
+        <Button Grid.Row="3" x:Name="mBTLogin" VerticalAlignment="Center" Content="登 陆" Margin="12,0" FontSize="16" Click="click_login"/>
+    </Grid>
+</Page>

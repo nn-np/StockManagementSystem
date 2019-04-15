@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace data
 {
     // 这个类是服务性质的，我认为这个类不需要检查异常，让外面调用者检查并判断
+    // 6B99EA9FBBD04700F4C0FCD4DA705623
     /// <summary>
     /// 用于获取配置文件
     /// </summary>

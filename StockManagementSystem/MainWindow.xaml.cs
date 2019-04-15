@@ -29,10 +29,26 @@ namespace StockManagementSystem
         private NnStockManager m_manager;
         private NnConnection m_connection;
         private string submitStr;// 用于提交或者搜索的字符串
+
+        public bool IsPassed { get; internal set; }
+
         public MainWindow()
         {
             InitializeComponent();
             new Thread(init).Start();// 开始初始化
+            if (!IsPassed)
+            {
+                mBTSubmit.Visibility = Visibility.Collapsed;
+                Run run = new Run("多肽库存服务");
+                run.FontSize = 24;
+                mTBTitle.Text = "";
+                mTBTitle.Inlines.Add(run);
+                Run run2 = new Run("输入OrderID、WorkNo或库存坐标进行搜索");
+                run2.FontSize = 16;
+                run2.FontWeight = FontWeights.Thin;
+                mTBTitle.Inlines.Add(new LineBreak());
+                mTBTitle.Inlines.Add(run2);
+            }
             _statusBarState("正在初始化...", true);
         }
 

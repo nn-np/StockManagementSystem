@@ -1,0 +1,22 @@
+﻿<Window x:Class="StockManagementSystem.Start"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:StockManagementSystem"
+        mc:Ignorable="d"
+        Title="StorkManagementSystem" Height="450" Width="320" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="5*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock VerticalAlignment="Center"  Margin="12,12,0,7">
+            <Run  FontSize="24">多肽库存服务</Run>
+            <LineBreak/>
+            <Run  FontSize="16" FontWeight="Thin">以管理员身份登陆或跳过登陆仅用于搜索</Run>
+        </TextBlock>
+        <Frame x:Name="mFrame" Grid.Row="1" NavigationUIVisibility="Hidden" Margin="12"/>
+    </Grid>
+</Window>

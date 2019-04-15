@@ -13,7 +13,7 @@ namespace data
     /// <summary>
     /// 用于对数据库的操作以及维护等工作
     /// </summary>
-    class NnStockManager
+    public class NnStockManager
     {
         private OleDbConnection m_connection;// 数据库
         private Configuration m_configuration;// 配置文件读写
@@ -42,6 +42,35 @@ namespace data
         /// 数据库文件所在路径
         /// </summary>
         public string DatabasePath { get; set; }
+
+        // 验证密码
+        public bool IsPassed(string name, string md5)
+        {
+            string sql = $"select * from _user where _user='{name}'";
+            try
+            {
+                using(OleDbDataReader reader = _executeReader(sql))
+                {
+                    if (reader.Read())
+                    {
+                        return md5 == (reader.GetString(reader.GetOrdinal("passwors")));
+                    }
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        // 添加用户
+        public int AddUser(string name,string md5)
+        {
+            string sql = $"insert into _user (_user,password) values('{name}','{md5}')";
+            try
+            {
+                return _exeCuteNonQuery(sql);
+            }
+            catch { return 0; }
+        }
 
         /// <summary>
         /// 导出所有的可用坐标
@@ -93,7 +122,7 @@ namespace data
                 System.Diagnostics.Process.Start(path);
 
             }
-            catch { ShowMessage("文件写入失败", true); }
+            catch { if (ShowMessage != null) ShowMessage("文件写入失败", true); }
         }
 
         // 用于搜索
@@ -213,15 +242,19 @@ namespace data
         // 删除自己创建的无用文件
         private void _deleteOtherFile()
         {
-            DirectoryInfo info = new DirectoryInfo(m_path);
-            foreach (FileInfo finfo in info.GetFiles())
+            try
             {
-                try
+                DirectoryInfo info = new DirectoryInfo(m_path);
+                foreach (FileInfo finfo in info.GetFiles())
                 {
-                    finfo.Delete();
+                    try
+                    {
+                        finfo.Delete();
+                    }
+                    catch { }
                 }
-                catch { }
             }
+            catch { }
         }
 
         /// <summary>
@@ -231,11 +264,42 @@ namespace data
         /// <returns></returns>
         public int Submit(NnStock stock)
         {
-            // 添加
-            if (string.IsNullOrWhiteSpace(stock.Cause))
+            switch (stock.State)
+            {
+                case NnStock.StockState.Insert:// 添加
                 return _addIntoDatabase(stock);
-            else// 移除
+                case NnStock.StockState.Update:// 更新
+                    return _updateForDatabase(stock);
+                case NnStock.StockState.Delete:// 移除
                 return _removeFromDatabase(stock);
+                default:return 0;
+            }
+        }
+
+        // 更新数据库数据
+        private int _updateForDatabase(NnStock stock)
+        {
+            int count = 0;
+            try
+            {
+                string sql = $"select * from stock_new where coordinate='{stock.Coordinate}'";
+                using (OleDbDataReader reader = _executeReader(sql))
+                {
+                    if (reader.Read())
+                    {
+                        NnStock sk = _getNnStcokFromReader(reader, true);
+                        sk.Purity = stock.Purity;
+                        sk.Mw = stock.Mw;
+                        if (stock.Quality > 0)
+                            sk.Quality = stock.Quality;
+                        sql = $"update stock_new set quality={sk.Quality},purity={sk.Purity},mw={sk.Mw} where coordiante='{sk.Coordinate}'";
+                        return _exeCuteNonQuery(sql);
+                    }
+                    else return 0;
+                }
+            }
+            catch { }
+            return count;
         }
 
         // 加入数据库

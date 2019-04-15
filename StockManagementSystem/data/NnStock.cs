@@ -7,7 +7,7 @@ using System.Linq;
  */
 namespace data
 {
-    class NnStock
+    public class NnStock
     {
         // -------属性------
         private double purity;// 纯度
@@ -69,8 +69,24 @@ namespace data
         public string MwString { get => mw.ToString(); set => mw = getMaxValue(value); }
 
         // 判断一条数据是否有效，必须要有坐标，如果没有原因，则必须要有orderId或者workNo二者之一
-        public bool IsAvailable{ get => !string.IsNullOrWhiteSpace(Coordinate) && (!string.IsNullOrEmpty(Cause) || ((OrderId ?? "").Contains('-')) || WorkNo > 0); }
+        public bool IsAvailable { get => !string.IsNullOrWhiteSpace(Coordinate) && Coordinate.Contains('-'); }
+        //public bool IsAvailable{ get => !string.IsNullOrWhiteSpace(Coordinate) && (!string.IsNullOrEmpty(Cause) || ((OrderId ?? "").Contains('-')) || WorkNo > 0); }
         //public bool IsAvailable { get => string.IsNullOrEmpty(Cause) ? ((OrderId ?? "").Contains('-') || WorkNo > 0) && (Coordinate ?? "").Contains('-') : (Coordinate ?? "").Contains('-'); }
+
+            // 这条数据的状态（需要更新，插入还是删除）
+         public StockState State
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(Cause))
+                {
+                    if (string.IsNullOrWhiteSpace(OrderId))
+                        return StockState.Update;
+                    return StockState.Insert;
+                }
+                return StockState.Delete;
+            }
+        }
 
         public double Purity { get => purity; set => purity = value; }
         public string PurityString
@@ -151,6 +167,13 @@ namespace data
                 }
             }
             return value;
+        }
+
+        public enum StockState
+        {
+            Insert,
+            Delete,
+            Update
         }
     }
 }
