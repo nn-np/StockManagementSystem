@@ -46,14 +46,15 @@ namespace data
         // 验证密码
         public bool IsPassed(string name, string md5)
         {
-            string sql = $"select * from _user where _user='{name}'";
+            string sql = $"select * from [_users] where [_user]='{name}'";
             try
             {
                 using(OleDbDataReader reader = _executeReader(sql))
                 {
                     if (reader.Read())
                     {
-                        return md5 == (reader.GetString(reader.GetOrdinal("passwors")));
+                        string str = reader.GetString(reader.GetOrdinal("password"));
+                        return md5 == (reader.GetString(reader.GetOrdinal("password")));
                     }
                 }
             }
@@ -64,12 +65,12 @@ namespace data
         // 添加用户
         public int AddUser(string name,string md5)
         {
-            string sql = $"insert into _user (_user,password) values('{name}','{md5}')";
+            string sql = $"insert into [_users] ([_user],[password]) values('{name}','{md5}')";
             try
             {
                 return _exeCuteNonQuery(sql);
             }
-            catch { return 0; }
+            catch{ return 0; }
         }
 
         /// <summary>
@@ -292,7 +293,7 @@ namespace data
                         sk.Mw = stock.Mw;
                         if (stock.Quality > 0)
                             sk.Quality = stock.Quality;
-                        sql = $"update stock_new set quality={sk.Quality},purity={sk.Purity},mw={sk.Mw} where coordiante='{sk.Coordinate}'";
+                        sql = $"update stock_new set quality={sk.Quality},purity={sk.Purity},mw={sk.Mw} where coordinate='{sk.Coordinate}'";
                         return _exeCuteNonQuery(sql);
                     }
                     else return 0;

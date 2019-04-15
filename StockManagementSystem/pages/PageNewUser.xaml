@@ -17,13 +17,13 @@
         <TextBlock x:Name="mTBWorring" Foreground="#FFCA5100" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
         <StackPanel VerticalAlignment="Top" Grid.Row="1">
             <TextBlock Text="管理员密码："/>
-            <PasswordBox x:Name="mPBAmid" VerticalAlignment="Center" FontSize="16"/>
+            <PasswordBox x:Name="mPBAmid" VerticalAlignment="Center" FontSize="14"/>
             <TextBlock Text="用户名："/>
-            <TextBox x:Name="mTBUsername" VerticalAlignment="Center" FontSize="16"/>
+            <TextBox x:Name="mTBUsername" VerticalAlignment="Center" FontSize="14"/>
             <TextBlock Text="密码："/>
-            <PasswordBox x:Name="mPBPassword" VerticalAlignment="Center" FontSize="16"/>
+            <PasswordBox x:Name="mPBPassword" VerticalAlignment="Center" FontSize="14"/>
             <TextBlock Text="密码重复："/>
-            <PasswordBox x:Name="mPBRePassword" VerticalAlignment="Center" FontSize="16"/>
+            <PasswordBox x:Name="mPBRePassword" VerticalAlignment="Center" FontSize="14"/>
         </StackPanel>
         <Grid Grid.Row="2" VerticalAlignment="Center">
             <TextBlock VerticalAlignment="Center" Margin="50,0,0,0" HorizontalAlignment="Right">

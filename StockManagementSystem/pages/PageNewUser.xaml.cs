@@ -50,7 +50,11 @@ namespace StockManagementSystem.pages
             }
             if(manager.AddUser(mTBUsername.Text.Trim(), NnConnection.GetMD5String(mPBRePassword.Password)) > 0)
             {
+                MainWindow window = new MainWindow(true);
+                Application.Current.MainWindow = window;
+                window.Show();
                 ((Start)parent).ShowMessage("用户添加成功，并已使用此用户登陆。", false);
+                parent.Close();
             }
             else
             {

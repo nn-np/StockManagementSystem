@@ -1,6 +1,7 @@
 ﻿using data;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,6 +28,14 @@ namespace StockManagementSystem
         public Start()
         {
             InitializeComponent();
+            if (ConfigurationManager.AppSettings["isSkip"] != null && ConfigurationManager.AppSettings["isSkip"].ToUpper() == "TRUE")
+            {
+                MainWindow window = new MainWindow();
+                Application.Current.MainWindow = window;
+                window.Show();
+                this.Close();
+                return;
+            }
             mLogin = new PageLogin(this);
             mFrame.Content = mLogin;
             manager = new NnStockManager(ShowMessage);

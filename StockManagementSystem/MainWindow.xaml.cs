@@ -32,9 +32,10 @@ namespace StockManagementSystem
 
         public bool IsPassed { get; internal set; }
 
-        public MainWindow()
+        public MainWindow(bool isPassed = false)
         {
             InitializeComponent();
+            IsPassed = isPassed;
             new Thread(init).Start();// 开始初始化
             if (!IsPassed)
             {
@@ -133,15 +134,8 @@ namespace StockManagementSystem
                 if (stock.IsAvailable)
                 {
                     int count = m_manager.Submit(stock);
-                    bool isAdd = string.IsNullOrEmpty(stock.Cause);
-                    string showStr = subStr.TrimEnd() + "\t---\t" + (isAdd ? "添加" : "移除");
-                    if (count > 0)
-                    {
-                        showStr += "成功\n";
-                        ++successcount;
-                    }
-                    else
-                        showStr += (isAdd ? "失败，记录已存在\n" : "失败，记录不存在\n");
+                    string showStr = _getSubmitFeedback(subStr, stock, count);
+                    if (count > 0) ++successcount;
                     this.Dispatcher.Invoke(update, showStr);
                 }
                 else
@@ -154,6 +148,44 @@ namespace StockManagementSystem
 
             // 每次更新结束后检查是否需要备份数据库
             _checkBackup();
+        }
+
+        private string _getSubmitFeedback(string subStr,NnStock stock,int count)
+        {
+            bool isAdd = string.IsNullOrWhiteSpace(stock.Cause);
+            string showStr = subStr.TrimEnd() + "\t---\t";
+            switch (stock.State)
+            {
+                case NnStock.StockState.Insert:
+                    showStr += "添加";
+                    break;
+                case NnStock.StockState.Update:
+                    showStr += "更新";
+                    break;
+                case NnStock.StockState.Delete:
+                    showStr += "移除";
+                    break;
+            }
+            if (count > 0)
+            {
+                showStr += "成功\n";
+            }
+            else
+            {
+                switch (stock.State)
+                {
+                    case NnStock.StockState.Insert:
+                        showStr += "添加失败，记录已存在\n";
+                        break;
+                    case NnStock.StockState.Update:
+                        showStr += "失败，记录不存在\n";
+                        break;
+                    case NnStock.StockState.Delete:
+                        showStr += "失败，记录不存在\n";
+                        break;
+                }
+            }
+            return showStr;
         }
 
         private void _checkBackup()

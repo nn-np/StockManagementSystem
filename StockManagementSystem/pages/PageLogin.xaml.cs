@@ -2,6 +2,7 @@
 using StockManagementSystem.pages;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,8 +30,8 @@ namespace StockManagementSystem
         public PageLogin(Window window)
         {
             InitializeComponent();
+            userName.Text = _getStringFromConfiguration("lastUser");
             mParent = window;
-            mManager = ((Start)mParent).StockManager;
         }
 
         // 新建账号
@@ -49,16 +50,37 @@ namespace StockManagementSystem
         // 跳过
         private void click_skip(object sender, RoutedEventArgs e)
         {
+            if (isSkip.IsChecked != null && (bool)isSkip.IsChecked)
+                _updateConfiguration("isSkip", true.ToString());
+
             MainWindow window = new MainWindow();
-            window.IsPassed = false;
             Application.Current.MainWindow = window;
             window.Show();
             mParent.Close();
         }
 
+        // 更新配置文件
+        private void _updateConfiguration(string key, string value)
+        {
+            Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            if (configuration.AppSettings.Settings[key] != null)
+                configuration.AppSettings.Settings[key].Value = value;
+            else
+                configuration.AppSettings.Settings.Add(key, value);
+            configuration.Save();
+        }
+
+        // 从配文件获取字符串
+        private string _getStringFromConfiguration(string key)
+        {
+            return ConfigurationManager.AppSettings[key];
+        }
+
         // 登陆
         private void click_login(object sender, RoutedEventArgs e)
         {
+            if (mManager == null)
+                mManager = ((Start)mParent).StockManager;
             if (mManager == null || !mManager.IsValid)
             {
                 mTBWorring.Text = "初始化失败，无法登陆！";
@@ -71,8 +93,8 @@ namespace StockManagementSystem
             }
             if (mManager.IsPassed(userName.Text, NnConnection.GetMD5String(password.Password)))
             {
-                MainWindow window = new MainWindow();
-                window.IsPassed = true;
+                _updateConfiguration("lastUser", userName.Text);
+                MainWindow window = new MainWindow(true);
                 Application.Current.MainWindow = window;
                 window.Show();
                 mParent.Close();
