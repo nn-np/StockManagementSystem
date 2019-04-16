@@ -20,19 +20,19 @@
             <PasswordBox x:Name="mPBAmid" VerticalAlignment="Center" FontSize="14"/>
             <TextBlock Text="用户名："/>
             <TextBox x:Name="mTBUsername" VerticalAlignment="Center" FontSize="14"/>
-            <TextBlock Text="密码："/>
+            <TextBlock Text="登录密码："/>
             <PasswordBox x:Name="mPBPassword" VerticalAlignment="Center" FontSize="14"/>
-            <TextBlock Text="密码重复："/>
+            <TextBlock Text="确认密码："/>
             <PasswordBox x:Name="mPBRePassword" VerticalAlignment="Center" FontSize="14"/>
         </StackPanel>
-        <Grid Grid.Row="2" VerticalAlignment="Center">
+        <Button Grid.Row="2" x:Name="mBTLogin" VerticalAlignment="Center" Content="提 交" Margin="12,0" FontSize="16" Click="click_newuser" IsDefault="True"/>
+        <Grid Grid.Row="3" VerticalAlignment="Center">
             <TextBlock VerticalAlignment="Center" Margin="50,0,0,0" HorizontalAlignment="Right">
                 <LineBreak/>
-                <Hyperlink FontSize="15" Click="click_cancel">
+                <Hyperlink FontSize="15" Click="click_cancel" TextDecorations="{x:Null}">
                     <TextBlock>取 消</TextBlock>
                 </Hyperlink>
             </TextBlock>
         </Grid>
-        <Button Grid.Row="3" x:Name="mBTLogin" VerticalAlignment="Center" Content="提 交" Margin="12,0" FontSize="16" Click="click_newuser"/>
     </Grid>
 </Page>

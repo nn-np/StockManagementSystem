@@ -38,7 +38,7 @@ namespace data
             }
         }
 
-        static string NnDecrypt(string decryptStr)
+        public static string NnDecrypt(string decryptStr)
         {
             byte[] decrypt = Convert.FromBase64String(decryptStr);
             using (RijndaelManaged rDel = new RijndaelManaged())

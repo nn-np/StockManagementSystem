@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace data
 {
@@ -448,7 +449,8 @@ namespace data
             }
             try
             {
-                m_connection = new OleDbConnection(connectionStr);
+                string str = NnConnection.NnDecrypt(connectionStr);
+                m_connection = new OleDbConnection(str);
                 m_connection.Open();
                 int i = connectionStr.IndexOf("Data Source=") + 12;
                 int len = connectionStr.IndexOf(";", i) - i;

@@ -22,18 +22,18 @@
             <TextBlock Text="密码：" Margin="0,12,0,0"/>
             <PasswordBox x:Name="password" VerticalAlignment="Center" FontSize="14"/>
         </StackPanel>
-        <Grid Grid.Row="2" VerticalAlignment="Center">
+        <Grid Grid.Row="3" VerticalAlignment="Center">
             <CheckBox x:Name="isSkip" Content="记住我的选择" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
             <TextBlock VerticalAlignment="Center" Margin="50,0,0,0" HorizontalAlignment="Right">
-            <Hyperlink FontSize="15" Click="click_new">
-                <TextBlock>新建账号</TextBlock>
+            <Hyperlink FontSize="15" Click="click_new" TextDecorations="{x:Null}">
+                <TextBlock TextDecorations="{x:Null}">新建账号</TextBlock>
             </Hyperlink>
             <LineBreak/>
-            <Hyperlink  FontSize="14" Click="click_skip">
+            <Hyperlink  FontSize="14" Click="click_skip" TextDecorations="{x:Null}">
                 <TextBlock HorizontalAlignment="Right">跳过</TextBlock>
             </Hyperlink>
         </TextBlock>
         </Grid>
-        <Button Grid.Row="3" x:Name="mBTLogin" VerticalAlignment="Center" Content="登 陆" Margin="12,0" FontSize="16" Click="click_login"/>
+        <Button Grid.Row="2" x:Name="mBTLogin" VerticalAlignment="Center" Content="登 陆" Margin="12,0" FontSize="16" Click="click_login" IsDefault="True"/>
     </Grid>
 </Page>
