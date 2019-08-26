@@ -22,7 +22,7 @@
             <LineBreak/>
             <Run FontSize="16" FontWeight="Thin" Language="zh-cn">用于提交库存信息或输入OrderID、WorkNo或库存坐标进行搜索</Run>
         </TextBlock>
-        <TextBox x:Name="m_tb" Grid.Row="1" TextWrapping="Wrap" Margin="5,5,0,5" AcceptsReturn="True" TextChanged="m_textcanged" MouseDoubleClick="tb_doubleclick"/>
+        <TextBox x:Name="m_tb" Grid.Row="1" TextWrapping="Wrap" Margin="5,5,0,5" AcceptsReturn="True" TextChanged="m_textcanged" MouseDoubleClick="tb_doubleclick" AcceptsTab="True"/>
         <Grid Grid.Column="1" Grid.Row="1" Margin="0,5,0,0" MinWidth="159">
             <Grid.RowDefinitions>
                 <RowDefinition Height="4*"></RowDefinition>

@@ -24,25 +24,22 @@ namespace data
         // 这个通过一个包括所有信息的字符串构建NnStock
         public NnStock(string allInfo)
         {
-            if (string.IsNullOrWhiteSpace(allInfo)) return;// TODO这里需要注意，如果allInfo为空具体怎么处理较好
-            allInfo = (allInfo.TrimEnd() + " ").Replace('\t', ' ');
-            int j = 0;
-            int index = 0;
-            string[] values = new string[7];
-            int i = allInfo.IndexOf(" ");
-            while (i >= 0 && index < 7)
-            {
-                values[index++] = allInfo.Substring(j, i - j);
-                j = i + 1;
-                i = allInfo.IndexOf(" ", j);
-            }
-            WorkNoString = values[0];
-            OrderId = values[1];
-            QualitySum = values[2];
-            Cause = values[3];
-            Coordinate = values[4];
-            PurityString = values[5];
-            MwString = values[6];
+            if (string.IsNullOrWhiteSpace(allInfo)) return;
+            string[] strs = allInfo.Split('\t');
+            if (strs.Length > 0)
+                WorkNoString = strs[0];
+            if (strs.Length > 1)
+                OrderId = strs[1];
+            if (strs.Length > 2)
+                QualitySum = strs[2];
+            if (strs.Length > 3)
+                Cause = strs[3];
+            if (strs.Length > 4)
+                Coordinate = strs[4];
+            if (strs.Length > 5)
+                PurityString = strs[5];
+            if (strs.Length > 6)
+                MwString = strs[6].TrimEnd();
         }
 
         public string OrderId { get; set; }

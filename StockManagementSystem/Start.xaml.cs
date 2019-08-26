@@ -28,6 +28,13 @@ namespace StockManagementSystem
         public Start()
         {
             InitializeComponent();
+#if (DEBUG)
+            MainWindow window = new MainWindow(true);
+            Application.Current.MainWindow = window;
+            window.Show();
+            this.Close();
+            return;
+#else
             if (ConfigurationManager.AppSettings["isSkip"] != null && ConfigurationManager.AppSettings["isSkip"].ToUpper() == "TRUE")
             {
                 MainWindow window = new MainWindow();
@@ -39,6 +46,7 @@ namespace StockManagementSystem
             mLogin = new PageLogin(this);
             mFrame.Content = mLogin;
             manager = new NnStockManager(ShowMessage);
+#endif
         }
 
         public NnStockManager StockManager { get => manager; }

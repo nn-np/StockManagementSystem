@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -101,6 +102,7 @@ namespace StockManagementSystem
         // 提交库存按钮
         private void click_submit(object sender, RoutedEventArgs e)
         {
+#if (!DEBUG)
             if (m_manager == null) return;
             submitStr = m_tb.Text;
             if (string.IsNullOrWhiteSpace(submitStr))
@@ -113,6 +115,9 @@ namespace StockManagementSystem
                 _showMessage("初始化失败，无法提交！", false);
                 return;
             }
+#else
+            submitStr = m_tb.Text;
+#endif
             submitStr += submitStr.EndsWith("\n") ? "" : "\n";
             new Thread(_submit).Start();
             _statusBarState("正在提交...", true);
@@ -122,25 +127,22 @@ namespace StockManagementSystem
         {
             TextBoxUpdate update = new TextBoxUpdate(_textBoxUpdate);
             this.Dispatcher.Invoke(update, "\n\n--------------\n");
-            int i = 0, j = 0;
             int counts = 0, successcount = 0;
-            while (true)
+            string[] values = submitStr.Split('\n');
+            foreach(var v in values)
             {
+                if (string.IsNullOrWhiteSpace(v)) continue;
                 ++counts;
-                i = submitStr.IndexOf('\n', j);
-                if (i < 0) break;
-                string subStr = submitStr.Substring(j, i - j);
-                NnStock stock = new NnStock(subStr);
+                NnStock stock = new NnStock(v);
                 if (stock.IsAvailable)
                 {
                     int count = m_manager.Submit(stock);
-                    string showStr = _getSubmitFeedback(subStr, stock, count);
+                    string showStr = _getSubmitFeedback(v, stock, count);
                     if (count > 0) ++successcount;
                     this.Dispatcher.Invoke(update, showStr);
                 }
                 else
-                    this.Dispatcher.Invoke(update, subStr.TrimEnd() + "\t---\t数据无效\n");
-                j = i + 1;
+                    this.Dispatcher.Invoke(update, v.TrimEnd() + "\t---\t数据无效\n");
             }
             this.Dispatcher.Invoke(update, $"--------------\n总计/成功/失败  {counts - 1}/{successcount}/{counts - successcount - 1}（条） nnns\n");
             submitStr = "";
@@ -152,7 +154,6 @@ namespace StockManagementSystem
 
         private string _getSubmitFeedback(string subStr,NnStock stock,int count)
         {
-            bool isAdd = string.IsNullOrWhiteSpace(stock.Cause);
             string showStr = subStr.TrimEnd() + "\t---\t";
             switch (stock.State)
             {
@@ -201,40 +202,45 @@ namespace StockManagementSystem
                         return;
                 }
             }
-            new Thread(() =>
+            new Thread(new ParameterizedThreadStart(_backup)).Start(configuration);
+        }
+
+        private void _backup(object o)
+        {
+            Configuration configuration = o as Configuration;
+            try
             {
-                try
+                string path = Environment.CurrentDirectory + @"\" + DateTime.Now.Ticks + ".nnbkp";
+
+                File.Copy(m_manager.DatabasePath, path);
+
+                if (configuration.AppSettings.Settings["backuptime"] == null)
+                    configuration.AppSettings.Settings.Add("backuptime", DateTime.Now.Ticks.ToString());
+                else
+                    configuration.AppSettings.Settings["backuptime"].Value = DateTime.Now.Ticks.ToString();
+                configuration.Save();
+                DirectoryInfo info = new DirectoryInfo(Environment.CurrentDirectory);
+                foreach (FileInfo finfo in info.GetFiles())
                 {
-                    string path = Environment.CurrentDirectory + @"\" + DateTime.Now.Ticks + ".nnbkp";
-                    File.Copy(m_manager.DatabasePath, path);
-                    if (configuration.AppSettings.Settings["backuptime"] == null)
-                        configuration.AppSettings.Settings.Add("backuptime", DateTime.Now.Ticks.ToString());
-                    else
-                        configuration.AppSettings.Settings["backuptime"].Value = DateTime.Now.Ticks.ToString();
-                    configuration.Save();
-                    DirectoryInfo info = new DirectoryInfo(Environment.CurrentDirectory);
-                    foreach (FileInfo finfo in info.GetFiles())
+                    if (finfo.Extension == ".nnbkp")
                     {
-                        if (finfo.Extension == ".nnbkp")
+                        long ticks;
+                        if (!long.TryParse(System.IO.Path.GetFileNameWithoutExtension(finfo.Name), out ticks))
+                            continue;
+                        DateTime tm = new DateTime(ticks);
+                        if (_daySpan(tm, DateTime.Now) > 7)
                         {
-                            long ticks;
-                            if (!long.TryParse(System.IO.Path.GetFileNameWithoutExtension(finfo.Name), out ticks))
-                                continue;
-                            DateTime tm = new DateTime(ticks);
-                            if (_daySpan(tm, DateTime.Now) > 7)
+                            try
                             {
-                                try
-                                {
-                                    finfo.Delete();
-                                }
-                                catch { }
+                                finfo.Delete();
                             }
+                            catch { }
                         }
                     }
-                    _showMessage("数据已备份！", false);
                 }
-                catch { }
-            }).Start();
+                _showMessage("数据已备份！", false);
+            }
+            catch(Exception e) { Console.WriteLine(e.ToString()); }
         }
 
         private int _daySpan(DateTime t1,DateTime t2)

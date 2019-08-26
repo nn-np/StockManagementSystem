@@ -47,31 +47,40 @@ namespace data
         // 验证密码
         public bool IsPassed(string name, string md5)
         {
-            string sql = $"select * from [_users] where [_user]='{name}'";
-            try
+            using (OleDbCommand cmd = new OleDbCommand("select * from [_users] where [_user]=@na", m_connection))
             {
-                using(OleDbDataReader reader = _executeReader(sql))
+                cmd.Parameters.AddWithValue("na", name);
+                try
                 {
-                    if (reader.Read())
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
                     {
-                        string str = reader.GetString(reader.GetOrdinal("password"));
-                        return md5 == (reader.GetString(reader.GetOrdinal("password")));
+                        if (reader.Read())
+                        {
+                            string str = reader.GetString(reader.GetOrdinal("password"));
+                            return md5 == (reader.GetString(reader.GetOrdinal("password")));
+                        }
                     }
                 }
+                catch { }
             }
-            catch { }
             return false;
         }
 
         // 添加用户
-        public int AddUser(string name,string md5)
+        public int AddUser(string name, string md5)
         {
-            string sql = $"insert into [_users] ([_user],[password]) values('{name}','{md5}')";
-            try
+            int count = 0;
+            using (OleDbCommand cmd = new OleDbCommand("insert into [_users] ([_user],[password]) values(@na,@md)", m_connection))
             {
-                return _exeCuteNonQuery(sql);
+                cmd.Parameters.AddWithValue("na", name);
+                cmd.Parameters.AddWithValue("md", md5);
+                try
+                {
+                    count = cmd.ExecuteNonQuery();
+                }
+                catch { }
             }
-            catch{ return 0; }
+            return count;
         }
 
         /// <summary>
@@ -81,30 +90,32 @@ namespace data
         public void OutputCoordinate()
         {
             StringBuilder sb = new StringBuilder();
-            string sql = $"select * from coordinate";
-            try
+            using (OleDbCommand cmd = new OleDbCommand("select * from coordinate", m_connection))
             {
-                using (OleDbDataReader reader = _executeReader(sql))
+                try
                 {
-                    while (reader.Read())
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
                     {
-                        try
+                        while (reader.Read())
                         {
-                            string plate = reader["plate"] as string;
-                            string coo = reader["coo"] as string;
-                            int i = coo.IndexOf(','), j = 0;
-                            while (i > 0)
+                            try
                             {
-                                sb.Append(plate).Append('-').Append(coo.Substring(j, i - j)).Append(",\n");
-                                j = i + 1;
-                                i = coo.IndexOf(',', j);
+                                string plate = reader["plate"] as string;
+                                string coo = reader["coo"] as string;
+                                int i = coo.IndexOf(','), j = 0;
+                                while (i > 0)
+                                {
+                                    sb.Append(plate).Append('-').Append(coo.Substring(j, i - j)).Append(",\n");
+                                    j = i + 1;
+                                    i = coo.IndexOf(',', j);
+                                }
                             }
+                            catch { }
                         }
-                        catch { }
                     }
                 }
+                catch { }
             }
-            catch { }
             _writeToFileAndOpen(sb.ToString());
         }
 
@@ -282,40 +293,60 @@ namespace data
         private int _updateForDatabase(NnStock stock)
         {
             int count = 0;
-            try
+            using (OleDbCommand cmd = new OleDbCommand("select * from stock_new where coordinate=@cd", m_connection))
             {
-                string sql = $"select * from stock_new where coordinate='{stock.Coordinate}'";
-                using (OleDbDataReader reader = _executeReader(sql))
+                cmd.Parameters.AddWithValue("cd", stock.Coordinate);
+                try
                 {
-                    if (reader.Read())
+                    NnStock sk = null;
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
                     {
-                        NnStock sk = _getNnStcokFromReader(reader, true);
-                        sk.Purity = stock.Purity;
-                        sk.Mw = stock.Mw;
-                        if (stock.Quality > 0)
-                            sk.Quality = stock.Quality;
-                        sql = $"update stock_new set quality={sk.Quality},purity={sk.Purity},mw={sk.Mw} where coordinate='{sk.Coordinate}'";
-                        return _exeCuteNonQuery(sql);
+                        if (reader.Read())
+                        {
+                            sk = _getNnStcokFromReader(reader, true);
+                            sk.Purity = stock.Purity;
+                            sk.Mw = stock.Mw;
+                            if (stock.Quality > 0)
+                                sk.Quality = stock.Quality;
+                        }
                     }
-                    else return 0;
+                    if (sk == null) return count;
+                    cmd.Parameters.Clear();
+                    cmd.CommandText = "update stock_new set quality=@qt,purity=@pt,mw=@mw where coordinate=@cd";
+                    cmd.Parameters.AddWithValue("qt", sk.Quality);
+                    cmd.Parameters.AddWithValue("pt", sk.Purity);
+                    cmd.Parameters.AddWithValue("mw", sk.Mw);
+                    cmd.Parameters.AddWithValue("cd", sk.Coordinate);
+                    count = cmd.ExecuteNonQuery();
                 }
+                catch (Exception e) { Console.WriteLine(e.ToString()); }
             }
-            catch { }
             return count;
         }
 
         // 加入数据库
         private int _addIntoDatabase(NnStock stock)
         {
-            string sql = $"insert into stock_new ([_date],workNo,orderId,quality,coordinate,purity,mw) " +
-                $"values('{DateTime.Now}',{stock.WorkNo},'{stock.OrderId}',{stock.Quality},'{stock.Coordinate}',{stock.Purity},{stock.Mw})";
             int count = 0;
-            try
+            using (OleDbCommand cmd = new OleDbCommand("", m_connection))
             {
-                count = _exeCuteNonQuery(sql);
+                cmd.CommandText = "insert into stock_new([_date], workNo, orderId, quality, coordinate, purity, mw) " +
+                $"values(@de,@wn,@oi,@qt,@cd,@pt,@mw)";
+                cmd.Parameters.AddWithValue("de", DateTime.Now.ToString());
+                cmd.Parameters.AddWithValue("wn", stock.WorkNo);
+                cmd.Parameters.AddWithValue("oi", stock.OrderId);
+                cmd.Parameters.AddWithValue("qt", stock.Quality);
+                cmd.Parameters.AddWithValue("cd", stock.Coordinate);
+                cmd.Parameters.AddWithValue("pt", stock.Purity);
+                cmd.Parameters.AddWithValue("mw", stock.Mw);
+                try
+                {
+                    count = cmd.ExecuteNonQuery();
+                }
+                catch (Exception e) { Console.WriteLine(e.ToString()); }
+
                 _updateCoordinate(stock.Coordinate, true);
             }
-            catch (Exception e){ Console.WriteLine(e.ToString()); }
             return count;
         }
 
@@ -323,62 +354,94 @@ namespace data
         private int _removeFromDatabase(NnStock stock)
         {
             int count = 0;
-            try
+            using (OleDbCommand cmd = new OleDbCommand("select * from stock_new where coordinate=@cd", m_connection))
             {
-                string sql = $"select * from stock_new where coordinate='{stock.Coordinate}'";
-                using (OleDbDataReader reader = _executeReader(sql))
+                cmd.Parameters.AddWithValue("cd", stock.Coordinate);
+                try
                 {
-                    if (reader.Read())
+                    NnStock sk = null;
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
                     {
-                        NnStock sk = _getNnStcokFromReader(reader, true);
-                        sql = $"insert into stock_old (dateAdd,dateRemove,workNo,orderId,quality,purity,mw,cause) " +
-                            $"values('{sk.DateAdd}','{DateTime.Now}',{sk.WorkNo},'{sk.OrderId}',{sk.Quality},{sk.Purity},{sk.Mw},'{stock.Cause}')";
-
-                        count = _exeCuteNonQuery(sql);
-                        if (count > 0)
+                        if (reader.Read())
                         {
-                            sql = $"delete from stock_new where coordinate='{stock.Coordinate}'";
-                            int i = _exeCuteNonQuery(sql);
-                            _updateCoordinate(stock.Coordinate, false);
+                            sk = _getNnStcokFromReader(reader, true);
                         }
                     }
-                    else
-                        return 0;
+                    if (sk == null) return count;
+
+                    cmd.Parameters.Clear();
+                    cmd.CommandText = $"insert into stock_old (dateAdd,dateRemove,workNo,orderId,quality,purity,mw,cause) values(@dta,@dtn,@wn,@oi,@qt,@pt,@mw,@ca)";
+                    cmd.Parameters.AddWithValue("dta", sk.DateAdd.ToString());
+                    cmd.Parameters.AddWithValue("dtn", DateTime.Now.ToString());
+                    cmd.Parameters.AddWithValue("wn", sk.WorkNo);
+                    cmd.Parameters.AddWithValue("oi", sk.OrderId);
+                    cmd.Parameters.AddWithValue("qt", sk.Quality);
+                    cmd.Parameters.AddWithValue("pt", sk.Purity);
+                    cmd.Parameters.AddWithValue("mw", sk.Mw);
+                    cmd.Parameters.AddWithValue("ca", stock.Cause);
+                    count = cmd.ExecuteNonQuery();
+                    if (count > 0)
+                    {
+                        cmd.Parameters.Clear();
+                        cmd.CommandText = "delete from stock_new where coordinate=@cd";
+                        cmd.Parameters.AddWithValue("cd", stock.Coordinate);
+                        cmd.ExecuteNonQuery();
+                        _updateCoordinate(stock.Coordinate, false);
+                    }
                 }
+                catch (Exception e) { Console.WriteLine(e.ToString()); }
             }
-            catch(Exception e){ Console.WriteLine(e.ToString()); return 0; }
             return count;
         }
-        
+
         /// <summary>
         /// 更新数据库坐标
         /// </summary>
         /// <param name="coordinate">坐标</param>
         /// <param name="isRemove">是否移除坐标</param>
-        private void _updateCoordinate(string coordinate,bool isRemove)
+        private void _updateCoordinate(string coordinate, bool isRemove)
         {
-            int index = coordinate.IndexOf('-');
-            if (index < 0) return;
-            string plate = coordinate.Substring(0, index);
-            string place = coordinate.Substring(index + 1, coordinate.Length - index - 1);
-            string sql = $"select * from coordinate where plate = '{plate}'";
-            using (OleDbDataReader reader = _executeReader(sql))
+            try
             {
-                if (reader.Read())
-                {
-                    string newplace;
-                    if (isRemove)
-                        newplace = (reader["coo"] as string).Replace(place + ",", "");
-                    else
-                        newplace = _getNewPlace(reader["coo"] as string, place);
-                    _exeCuteNonQuery($"update coordinate set coo = '{newplace}' where plate = '{plate}'");
-                }
-                else if (!isRemove)
-                {
-                    _exeCuteNonQuery($"insert into coordinate (plate,coo) values('{plate}','{place},')");
-                }
+                int index = coordinate.IndexOf('-');
+                if (index < 0) return;
+                string plate = coordinate.Substring(0, index);
+                string place = coordinate.Substring(index + 1, coordinate.Length - index - 1);
 
+
+                using (OleDbCommand cmd = new OleDbCommand("select * from coordinate where plate = @pt", m_connection))
+                {
+                    cmd.Parameters.AddWithValue("pt", plate);
+                    string newplace = null;
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            if (isRemove)
+                                newplace = (reader["coo"] as string).Replace(place + ",", "");
+                            else
+                                newplace = _getNewPlace(reader["coo"] as string, place);
+                        }
+                    }
+                    if (newplace != null)
+                    {
+                        cmd.Parameters.Clear();
+                        cmd.CommandText = "update coordinate set coo = @np where plate = @pt";
+                        cmd.Parameters.AddWithValue("np", newplace);
+                        cmd.Parameters.AddWithValue("pt", plate);
+                        cmd.ExecuteNonQuery();
+                    }
+                    else if (!isRemove)
+                    {
+                        cmd.Parameters.Clear();
+                        cmd.CommandText = "insert into coordinate (plate,coo) values(@pt,@ppt)";
+                        cmd.Parameters.AddWithValue("np", plate);
+                        cmd.Parameters.AddWithValue("pt", place);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
             }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
 
         // 获取排序后的新字符串，注意，这里的排序有瑕疵（根据字符串排序，以后改进）
@@ -403,16 +466,6 @@ namespace data
             if (!isInserted)
                 buder.Append(place).Append(',');
             return buder.ToString();
-        }
-
-        // 执行数据库操作
-        private int _exeCuteNonQuery(string sql)
-        {
-            using(OleDbCommand cmd = m_connection.CreateCommand())
-            {
-                cmd.CommandText = sql;
-                return cmd.ExecuteNonQuery();
-            }
         }
 
         // 从数据库读取数据
@@ -452,10 +505,10 @@ namespace data
                 string str = NnConnection.NnDecrypt(connectionStr);
                 m_connection = new OleDbConnection(str);
                 m_connection.Open();
-                int i = connectionStr.IndexOf("Data Source=") + 12;
-                int len = connectionStr.IndexOf(";", i) - i;
-                len = len > 0 ? len : connectionStr.Length - i;
-                DatabasePath = connectionStr.Substring(i, len);
+                int i = str.IndexOf("Data Source=") + 12;
+                int len = str.IndexOf(";", i) - i;
+                len = len > 0 ? len : str.Length - i;
+                DatabasePath = str.Substring(i, len);
             }
             catch
             {
