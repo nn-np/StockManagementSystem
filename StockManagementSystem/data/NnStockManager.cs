@@ -270,6 +270,140 @@ namespace data
             catch { }
         }
 
+
+        /// <summary>
+        /// 提交未QC订单
+        /// </summary>
+        /// <param name="stock"></param>
+        /// <returns></returns>
+        internal int SubmitNotQCOrder(NotQCOrder order)
+        {
+            switch (order.State)
+            {
+                case NotQCOrder.NotQCState.Insert:
+                    return _addNotQCIntoDB(order);
+                case NotQCOrder.NotQCState.Remove:
+                    return _removeNotQCFromDB(order);
+                default: return 0;
+            }
+        }
+
+        private int _removeNotQCFromDB(NotQCOrder order)
+        {
+            int count = 0;
+            try
+            {
+                using (OleDbCommand cmd = new OleDbCommand("UPDATE notqc SET DateRemove=@dr,Coordinate=notqc.ID,Comments=@cs,WorkNoRemove=@wr WHERE Coordinate=@cd", m_connection))
+                {
+                    cmd.Parameters.AddWithValue("dr", DateTime.Now.ToString());
+                    cmd.Parameters.AddWithValue("cs", order.Comments);
+                    cmd.Parameters.AddWithValue("wr", order.RemoveWorkNo);
+                    cmd.Parameters.AddWithValue("cd", order.RCoordinate);
+                    count = cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            return count;
+        }
+
+        private int _addNotQCIntoDB(NotQCOrder order)
+        {
+            int count = 0;
+            try
+            {
+                using (OleDbCommand cmd = new OleDbCommand("INSERT INTO notqc (DateAdd,WorkNo,OrderId,Quality,Coordinate,Comments) VALUES(@da,@wn,@oi,@qt,@cd,@cm)", m_connection))
+                {
+                    cmd.Parameters.AddWithValue("da", DateTime.Now.ToString());
+                    cmd.Parameters.AddWithValue("wn", order.WorkNo);
+                    cmd.Parameters.AddWithValue("oi", order.OrderId);
+                    cmd.Parameters.AddWithValue("qt", order.Quality);
+                    cmd.Parameters.AddWithValue("cd", order.RCoordinate);
+                    cmd.Parameters.AddWithValue("cm", order.Comments);
+                    count = cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            return count;
+        }
+
+
+        internal void AllNotQCData()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("日期").Append(',').Append("盒号").Append(',').Append("WO号").Append(',').Append("ID").Append(',')
+                .Append("质量").Append(',').Append("坐标").Append(',').Append("备注").Append(',').Append("取走日期").Append(',').Append("取走wo号\n");
+
+            try
+            {
+                using (OleDbCommand cmd = new OleDbCommand("SELECT * FROM notqc ORDER BY Coordinate DESC", m_connection))
+                {
+                    using(OleDbDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            NotQCOrder od = new NotQCOrder();
+                            od.InitNotQCOrderByDB(reader);
+                            sb.Append(od.ToString());
+                        }
+                    }
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            _writeToFileAndOpen(sb.ToString());
+        }
+
+        internal void SearchNotQCData(string str)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("搜索关键字").Append(',').Append("日期").Append(',').Append("盒号").Append(',').Append("WO号").Append(',').Append("ID").Append(',')
+                .Append("质量").Append(',').Append("坐标").Append(',').Append("备注").Append(',').Append("取走日期").Append(',').Append("取走wo号\n");
+            try
+            {
+                using (OleDbCommand cmd = new OleDbCommand())
+                {
+                    cmd.Connection = m_connection;
+                    string[] strs = str.Split('\n');
+                    foreach (var v in strs)
+                    {
+                        cmd.Parameters.Clear();
+                        if (v.Contains("/"))// 坐标
+                        {
+                            cmd.CommandText = "SELECT * FROM notqc WHERE Coordinate=@cd";
+                            cmd.Parameters.AddWithValue("cd", v.TrimEnd());
+                        }
+                        else if (v.Contains("-"))// OrderID
+                        {
+                            cmd.CommandText = "SELECT * FROM notqc WHERE OrderId=@id";
+                            cmd.Parameters.AddWithValue("id", v.TrimEnd());
+                        }
+                        else
+                        {
+                            cmd.CommandText = "SELECT * FROM notqc WHERE WorkNo=@wn";
+                            cmd.Parameters.AddWithValue("wn", v.TrimEnd());
+                        }
+                        using (OleDbDataReader reader = cmd.ExecuteReader())
+                        {
+                            sb.Append(v.TrimEnd()).Append(',');
+                            bool isFirst = true;
+                            while (reader.Read())
+                            {
+                                if (!isFirst)
+                                    sb.Append("").Append(',');
+                                isFirst = false;
+                                NotQCOrder od = new NotQCOrder();
+                                od.InitNotQCOrderByDB(reader);
+                                sb.Append(od.ToString());
+                            }
+                            if (isFirst) sb.Append('\n');
+                        }
+                    }
+                }
+            }
+            catch(Exception e) { Console.WriteLine(e.ToString()); }
+
+            _writeToFileAndOpen(sb.ToString());
+        }
+
         /// <summary>
         /// 将更改提交到数据库
         /// </summary>
@@ -280,12 +414,12 @@ namespace data
             switch (stock.State)
             {
                 case NnStock.StockState.Insert:// 添加
-                return _addIntoDatabase(stock);
+                    return _addIntoDatabase(stock);
                 case NnStock.StockState.Update:// 更新
                     return _updateForDatabase(stock);
                 case NnStock.StockState.Delete:// 移除
-                return _removeFromDatabase(stock);
-                default:return 0;
+                    return _removeFromDatabase(stock);
+                default: return 0;
             }
         }
 
@@ -550,6 +684,22 @@ namespace data
                 m_connection.Close();
             }
             catch { }
+        }
+
+        public static DateTime GetDateTiemFromDb(OleDbDataReader reader, string key)
+        {
+            int o = reader.GetOrdinal(key);
+            if (!reader.IsDBNull(o))
+                return (DateTime)reader[key];
+            return DateTime.MinValue;
+        }
+
+        public static string GetStringFromDb(OleDbDataReader reader, string key)
+        {
+            int o = reader.GetOrdinal(key);
+            if (!reader.IsDBNull(o))
+                return reader.GetString(o);
+            return "";
         }
     }
 }

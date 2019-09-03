@@ -28,7 +28,7 @@ namespace StockManagementSystem
     public partial class MainWindow : Window
     {
         private NnStockManager m_manager;
-        private NnConnection m_connection;
+
         private string submitStr;// 用于提交或者搜索的字符串
 
         public bool IsPassed { get; internal set; }
@@ -69,11 +69,6 @@ namespace StockManagementSystem
                 return;
             }
             _statusBarState("就绪", false);
-            try
-            {
-                m_connection = new NnConnection();
-            }
-            catch { }
         }
 
         // 搜索按钮
@@ -144,7 +139,7 @@ namespace StockManagementSystem
                 else
                     this.Dispatcher.Invoke(update, v.TrimEnd() + "\t---\t数据无效\n");
             }
-            this.Dispatcher.Invoke(update, $"--------------\n总计/成功/失败  {counts - 1}/{successcount}/{counts - successcount - 1}（条） nnns\n");
+            this.Dispatcher.Invoke(update, $"--------------\n总计/成功/失败  {counts}/{successcount}/{counts - successcount}（条） nnns\n");
             submitStr = "";
             _statusBarState("就绪", false);
 

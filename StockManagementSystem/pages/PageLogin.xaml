@@ -34,6 +34,13 @@
             </Hyperlink>
         </TextBlock>
         </Grid>
-        <Button Grid.Row="2" x:Name="mBTLogin" VerticalAlignment="Center" Content="登 陆" Margin="12,0" FontSize="16" Click="click_login" IsDefault="True"/>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="mBTLogin" VerticalAlignment="Center" Content="登陆库存" Margin="12,0" FontSize="16" Click="click_login" IsDefault="True"/>
+            <Button Grid.Column="1" VerticalAlignment="Center" Content="登陆半纯品库" Margin="12,0" FontSize="16" Click="click_login2"/>
+        </Grid>
     </Grid>
 </Page>

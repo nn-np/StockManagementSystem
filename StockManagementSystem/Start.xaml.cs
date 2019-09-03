@@ -1,4 +1,5 @@
-﻿using data;
+﻿//#define NOTQC
+using data;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -28,13 +29,21 @@ namespace StockManagementSystem
         public Start()
         {
             InitializeComponent();
-#if (DEBUG)
-            MainWindow window = new MainWindow(true);
+/*#if (DEBUG)
+#if (NOTQC)
+            NotQCWindow window = new NotQCWindow();
             Application.Current.MainWindow = window;
             window.Show();
             this.Close();
             return;
 #else
+            MainWindow window = new MainWindow(true);
+            Application.Current.MainWindow = window;
+            window.Show();
+            this.Close();
+            return;
+#endif
+#else*/
             if (ConfigurationManager.AppSettings["isSkip"] != null && ConfigurationManager.AppSettings["isSkip"].ToUpper() == "TRUE")
             {
                 MainWindow window = new MainWindow();
@@ -46,7 +55,7 @@ namespace StockManagementSystem
             mLogin = new PageLogin(this);
             mFrame.Content = mLogin;
             manager = new NnStockManager(ShowMessage);
-#endif
+//#endif
         }
 
         public NnStockManager StockManager { get => manager; }

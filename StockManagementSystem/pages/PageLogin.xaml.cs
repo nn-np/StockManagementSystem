@@ -79,6 +79,17 @@ namespace StockManagementSystem
         // 登陆
         private void click_login(object sender, RoutedEventArgs e)
         {
+            _toLogin(true);
+        }
+
+        private void click_login2(object sender, RoutedEventArgs e)
+        {
+            _toLogin(false);
+        }
+
+        private void _toLogin(bool isStock)
+        {
+
             if (mManager == null)
                 mManager = ((Start)mParent).StockManager;
             if (mManager == null || !mManager.IsValid)
@@ -94,7 +105,15 @@ namespace StockManagementSystem
             if (mManager.IsPassed(userName.Text, NnConnection.GetMD5String(password.Password)))
             {
                 _updateConfiguration("lastUser", userName.Text);
-                MainWindow window = new MainWindow(true);
+                Window window = null;
+                if (isStock)
+                {
+                    window = new MainWindow(true);
+                }
+                else
+                {
+                    window = new NotQCWindow();
+                }
                 Application.Current.MainWindow = window;
                 window.Show();
                 mParent.Close();
