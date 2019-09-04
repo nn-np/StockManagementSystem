@@ -354,9 +354,14 @@ namespace data
 
         internal void SearchNotQCData(string str)
         {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("搜索关键字").Append(',').Append("日期").Append(',').Append("盒号").Append(',').Append("WO号").Append(',').Append("ID").Append(',')
+            StringBuilder sbold = new StringBuilder();
+            sbold.Append("搜索关键字").Append(',').Append("日期").Append(',').Append("盒号").Append(',').Append("WO号").Append(',').Append("ID").Append(',')
                 .Append("质量").Append(',').Append("坐标").Append(',').Append("备注").Append(',').Append("取走日期").Append(',').Append("取走wo号\n");
+
+            StringBuilder sbnew = new StringBuilder();
+            sbnew.Append("搜索关键字").Append(',').Append("日期").Append(',').Append("盒号").Append(',').Append("WO号").Append(',').Append("ID").Append(',')
+                .Append("质量").Append(',').Append("坐标").Append(',').Append("备注\n");
+
             try
             {
                 using (OleDbCommand cmd = new OleDbCommand())
@@ -383,25 +388,36 @@ namespace data
                         }
                         using (OleDbDataReader reader = cmd.ExecuteReader())
                         {
-                            sb.Append(v.TrimEnd()).Append(',');
+                            sbold.Append(v.TrimEnd()).Append(',');
                             bool isFirst = true;
+                            bool isNewFirst = true;
                             while (reader.Read())
                             {
-                                if (!isFirst)
-                                    sb.Append("").Append(',');
-                                isFirst = false;
                                 NotQCOrder od = new NotQCOrder();
                                 od.InitNotQCOrderByDB(reader);
-                                sb.Append(od.ToString());
+                                if (od.State == NotQCOrder.NotQCState.Insert)
+                                {
+                                    if (!isNewFirst)
+                                        sbnew.Append("").Append(',');
+                                    isNewFirst = false;
+                                    sbnew.Append(od.NewDataString);
+                                }
+                                else
+                                {
+                                    if (!isFirst)
+                                        sbold.Append("").Append(',');
+                                    isFirst = false;
+                                    sbold.Append(od.ToString());
+                                }
                             }
-                            if (isFirst) sb.Append('\n');
+                            if (isFirst) sbold.Append('\n');
                         }
                     }
                 }
             }
-            catch(Exception e) { Console.WriteLine(e.ToString()); }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
 
-            _writeToFileAndOpen(sb.ToString());
+            _writeToFileAndOpen(sbnew.ToString() + "\n\n已被移除项目：\n" + sbold.ToString());
         }
 
         /// <summary>
@@ -616,6 +632,10 @@ namespace data
         {
             ++initcount;
             IsValid = true;
+#if (DEBUG)
+            m_connection = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Users\pepuser\Desktop\polypeptideInfo.accdb;Persist Security Info=False;Jet OLEDB:Database Password=4919.skFI");
+            m_connection.Open();
+#else
             m_configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             string connectionStr = null;
             // 如果第一次初始化失败，第二次初始化时直接从网络获取数据库连接字符串
@@ -656,6 +676,7 @@ namespace data
                     return;
                 }
             }
+#endif
         }
 
         // 从网络获取配置信息

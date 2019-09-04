@@ -123,6 +123,17 @@ namespace data
             return sb.ToString();
         }
 
+        public string NewDataString
+        {
+            get
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.Append(DateAdd.ToShortDateString()).Append(',').Append(BoxNo).Append(',').Append(WorkNo).Append(',')
+                    .Append(OrderId).Append(',').Append(Quality).Append(',').Append(Coordinate).Append(',').Append(Comments).Append(",\n");
+                return sb.ToString();
+            }
+        }
+
         public enum NotQCState
         {
             Insert,

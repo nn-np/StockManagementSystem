@@ -17,7 +17,7 @@ using System.Windows.Shapes;
 namespace StockManagementSystem
 {
     /// <summary>
-    /// NotQCWindow.xaml 的交互逻辑
+    /// 未QC库数据管理
     /// </summary>
     public partial class NotQCWindow : Window
     {
