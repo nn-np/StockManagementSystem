@@ -135,7 +135,7 @@ namespace data
                 System.Diagnostics.Process.Start(path);
 
             }
-            catch { if (ShowMessage != null) ShowMessage("文件写入失败", true); }
+            catch { ShowMessage?.Invoke("文件写入失败", true); }
         }
 
         // 用于搜索
@@ -143,8 +143,8 @@ namespace data
         {
             StringBuilder sb1 = new StringBuilder();
             StringBuilder sb2 = new StringBuilder();
-            sb1.Append("KeyWord,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,\n");
-            sb2.Append("\n\n已被移除项目：\nKeyWord,RemoveDate,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,Cause,\n");
+            sb1.Append("KeyWord,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,备注,\n");
+            sb2.Append("\n\n已被移除项目：\nKeyWord,RemoveDate,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,备注,Cause,\n");
             str += str.EndsWith("\n") ? "" : "\n";
             int i = str.IndexOf('\n'), j = 0;
             while (i > 0)
@@ -211,9 +211,7 @@ namespace data
             int ordinal;
             try
             {
-                ordinal = reader.GetOrdinal("orderId");
-                if (!reader.IsDBNull(ordinal))
-                    stock.OrderId = reader.GetString(ordinal);
+                stock.OrderId = GetStringFromDb(reader, "orderId");
                 ordinal = reader.GetOrdinal("workNo");
                 if (!reader.IsDBNull(ordinal))
                     stock.WorkNo = reader.GetInt32(ordinal);
@@ -228,24 +226,15 @@ namespace data
                     stock.Mw = (double)reader["mw"];
                 if (isNew)
                 {
-                    ordinal = reader.GetOrdinal("_date");
-                    if (!reader.IsDBNull(ordinal))
-                        stock.DateAdd = reader.GetDateTime(ordinal);
-                    ordinal = reader.GetOrdinal("coordinate");
-                    if (!reader.IsDBNull(ordinal))
-                        stock.Coordinate = reader.GetString(ordinal);
+                    stock.DateAdd = GetDateTiemFromDb(reader, "_date");
+                    stock.Coordinate = GetStringFromDb(reader, "coordinate");
+                    stock.Comments = GetStringFromDb(reader, "comments");
                 }
                 else
                 {
-                    ordinal = reader.GetOrdinal("dateAdd");
-                    if (!reader.IsDBNull(ordinal))
-                        stock.DateAdd = reader.GetDateTime(ordinal);
-                    ordinal = reader.GetOrdinal("dateRemove");
-                    if (!reader.IsDBNull(ordinal))
-                        stock.DateRemove = reader.GetDateTime(ordinal);
-                    ordinal = reader.GetOrdinal("cause");
-                    if (!reader.IsDBNull(ordinal))
-                        stock.Cause = reader.GetString(ordinal);
+                    stock.DateAdd = GetDateTiemFromDb(reader, "dateAdd");
+                    stock.DateRemove = GetDateTiemFromDb(reader, "dateRemove");
+                    stock.Cause = GetStringFromDb(reader, "cause");
                 }
             }
             catch { }
@@ -329,27 +318,37 @@ namespace data
 
         internal void AllNotQCData()
         {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("日期").Append(',').Append("盒号").Append(',').Append("WO号").Append(',').Append("ID").Append(',')
+            StringBuilder sbold = new StringBuilder();
+            sbold.Append("日期").Append(',').Append("盒号").Append(',').Append("WO号").Append(',').Append("ID").Append(',')
                 .Append("质量").Append(',').Append("坐标").Append(',').Append("备注").Append(',').Append("取走日期").Append(',').Append("取走wo号\n");
 
+            StringBuilder sbnew = new StringBuilder();
+            sbnew.Append("日期").Append(',').Append("盒号").Append(',').Append("WO号").Append(',').Append("ID").Append(',')
+                .Append("质量").Append(',').Append("坐标").Append(',').Append("备注\n");
             try
             {
                 using (OleDbCommand cmd = new OleDbCommand("SELECT * FROM notqc ORDER BY Coordinate DESC", m_connection))
                 {
-                    using(OleDbDataReader reader = cmd.ExecuteReader())
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
                             NotQCOrder od = new NotQCOrder();
                             od.InitNotQCOrderByDB(reader);
-                            sb.Append(od.ToString());
+                            if (od.State == NotQCOrder.NotQCState.Insert)
+                            {
+                                sbnew.Append(od.NewDataString);
+                            }
+                            else
+                            {
+                                sbold.Append(od.ToString());
+                            }
                         }
                     }
                 }
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
-            _writeToFileAndOpen(sb.ToString());
+            _writeToFileAndOpen(sbnew.ToString() + "\n\n已被移除项目：\n" + sbold.ToString());
         }
 
         internal void SearchNotQCData(string str)
@@ -370,6 +369,7 @@ namespace data
                     string[] strs = str.Split('\n');
                     foreach (var v in strs)
                     {
+                        if (string.IsNullOrWhiteSpace(v)) continue;
                         cmd.Parameters.Clear();
                         if (v.Contains("/"))// 坐标
                         {
@@ -389,6 +389,7 @@ namespace data
                         using (OleDbDataReader reader = cmd.ExecuteReader())
                         {
                             sbold.Append(v.TrimEnd()).Append(',');
+                            sbnew.Append(v.TrimEnd()).Append(',');
                             bool isFirst = true;
                             bool isNewFirst = true;
                             while (reader.Read())
@@ -480,8 +481,8 @@ namespace data
             int count = 0;
             using (OleDbCommand cmd = new OleDbCommand("", m_connection))
             {
-                cmd.CommandText = "insert into stock_new([_date], workNo, orderId, quality, coordinate, purity, mw) " +
-                $"values(@de,@wn,@oi,@qt,@cd,@pt,@mw)";
+                cmd.CommandText = "insert into stock_new([_date], workNo, orderId, quality, coordinate, purity, mw,comments) " +
+                $"values(@de,@wn,@oi,@qt,@cd,@pt,@mw,@cs)";
                 cmd.Parameters.AddWithValue("de", DateTime.Now.ToString());
                 cmd.Parameters.AddWithValue("wn", stock.WorkNo);
                 cmd.Parameters.AddWithValue("oi", stock.OrderId);
@@ -489,6 +490,7 @@ namespace data
                 cmd.Parameters.AddWithValue("cd", stock.Coordinate);
                 cmd.Parameters.AddWithValue("pt", stock.Purity);
                 cmd.Parameters.AddWithValue("mw", stock.Mw);
+                cmd.Parameters.AddWithValue("cs", stock.Comments);
                 try
                 {
                     count = cmd.ExecuteNonQuery();
@@ -558,6 +560,7 @@ namespace data
                 string plate = coordinate.Substring(0, index);
                 string place = coordinate.Substring(index + 1, coordinate.Length - index - 1);
 
+                if (plate == "L") return;
 
                 using (OleDbCommand cmd = new OleDbCommand("select * from coordinate where plate = @pt", m_connection))
                 {
@@ -648,8 +651,7 @@ namespace data
                 connectionStr = GetStringFromService("stock_connection");
                 if (connectionStr == null)
                 {
-                    if (ShowMessage != null)
-                        ShowMessage("配置文件错误！", true);
+                    ShowMessage?.Invoke("配置文件错误！", true);
                     IsValid = false;
                     return;
                 }
@@ -670,8 +672,7 @@ namespace data
                     init();
                 else
                 {
-                    if (ShowMessage != null)
-                        ShowMessage("数据库连接错误！建议检查数据库文件是否被改动。", true);
+                    ShowMessage?.Invoke("数据库连接错误！建议检查数据库文件是否被改动。", true);
                     IsValid = false;
                     return;
                 }

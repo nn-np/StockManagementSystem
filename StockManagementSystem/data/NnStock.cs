@@ -40,6 +40,8 @@ namespace data
                 PurityString = strs[5];
             if (strs.Length > 6)
                 MwString = strs[6].TrimEnd();
+            if (strs.Length > 7)
+                Comments = strs[7].TrimEnd();
         }
 
         public string OrderId { get; set; }
@@ -117,9 +119,15 @@ namespace data
         // 原因
         public string Cause { get; set; }
 
+        private string comments;
+        /// <summary>
+        /// Comments
+        /// </summary>
+        public string Comments { get => comments ?? ""; set => comments = value; }
+
         public override string ToString()
         {
-            return $"{DateAdd.ToShortDateString()},{WorkNo},{OrderId},{QualityString},{Coordinate},{PurityString},{MwString},";
+            return $"{DateAdd.ToShortDateString()},{WorkNo},{OrderId},{QualityString},{Coordinate},{PurityString},{MwString},{Comments},";
         }
 
         // -------方法-------
