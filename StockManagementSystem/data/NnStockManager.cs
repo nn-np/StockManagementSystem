@@ -84,12 +84,71 @@ namespace data
         }
 
         /// <summary>
+        /// 导出未QC坐标
+        /// </summary>
+        internal void OutputNotQCCoordinate()
+        {
+            List<Coordinates> list = new List<Coordinates>();
+            using (OleDbCommand cmd = new OleDbCommand("select * from notqccoordinate", m_connection))
+            {
+                try
+                {
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string box = reader["box"] as string;
+                            string coos = reader["coo"] as string;
+                            if (string.IsNullOrWhiteSpace(coos)) continue;
+                            string[] cos = coos.Split(',');
+                            try
+                            {
+                                foreach (var v in cos)
+                                {
+                                    if (string.IsNullOrWhiteSpace(v)) continue;
+                                    Coordinates coo = new Coordinates();
+                                    coo.Plate = box;
+                                    coo.Coordinate = v;
+                                    list.Add(coo);
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+                catch { }
+            }
+            StringBuilder sb = new StringBuilder();
+            list.Sort((x, y) =>
+            {
+                int i = x.Plate.CompareTo(y.Plate);
+                if (i != 0)
+                {
+                    return i;
+                }
+                return (int)(GetMaxValue(x.Coordinate)- GetMaxValue(y.Coordinate));
+            });
+            sb.Append("盒号").Append(',').Append("坐标").Append('\n');
+            foreach (var v in list)
+            {
+                sb.Append(v.Plate).Append(',').Append(v.Coordinate).Append('\n');
+            }
+            _writeToFileAndOpen(sb.ToString());
+        }
+
+        struct Coordinates
+        {
+            public string Plate;
+            public string Coordinate;
+        }
+
+        /// <summary>
         /// 导出所有的可用坐标
         /// </summary>
         /// <returns></returns>
         public void OutputCoordinate()
         {
-            StringBuilder sb = new StringBuilder();
+            List<Coordinates> list = new List<Coordinates>();
             using (OleDbCommand cmd = new OleDbCommand("select * from coordinate", m_connection))
             {
                 try
@@ -101,13 +160,16 @@ namespace data
                             try
                             {
                                 string plate = reader["plate"] as string;
-                                string coo = reader["coo"] as string;
-                                int i = coo.IndexOf(','), j = 0;
-                                while (i > 0)
+                                string coos = reader["coo"] as string;
+                                if (string.IsNullOrWhiteSpace(coos)) continue;
+                                string[] cos = coos.Split(',');
+                                foreach(var v in cos)
                                 {
-                                    sb.Append(plate).Append('-').Append(coo.Substring(j, i - j)).Append(",\n");
-                                    j = i + 1;
-                                    i = coo.IndexOf(',', j);
+                                    if (string.IsNullOrWhiteSpace(v)) continue;
+                                    Coordinates co = new Coordinates();
+                                    co.Plate = plate;
+                                    co.Coordinate = v;
+                                    list.Add(co);
                                 }
                             }
                             catch { }
@@ -115,6 +177,20 @@ namespace data
                     }
                 }
                 catch { }
+            }
+            list.Sort((x, y) =>
+            {
+                int i = x.Plate.CompareTo(y.Plate);
+                if (i != 0)
+                {
+                    return i;
+                }
+                return (int)(GetMaxValue(x.Coordinate) - GetMaxValue(y.Coordinate));
+            });
+            StringBuilder sb = new StringBuilder();
+            foreach(var v in list)
+            {
+                sb.Append(v.Plate).Append('-').Append(v.Coordinate).Append('\n');
             }
             _writeToFileAndOpen(sb.ToString());
         }
@@ -290,6 +366,8 @@ namespace data
                     cmd.Parameters.AddWithValue("cd", order.RCoordinate);
                     count = cmd.ExecuteNonQuery();
                 }
+                if (count > 0)
+                    _updateNotQCCoordinate(order, false);
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
             return count;
@@ -310,11 +388,12 @@ namespace data
                     cmd.Parameters.AddWithValue("cm", order.Comments);
                     count = cmd.ExecuteNonQuery();
                 }
+                if (count > 0)
+                    _updateNotQCCoordinate(order,true);
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
             return count;
         }
-
 
         internal void AllNotQCData()
         {
@@ -497,7 +576,8 @@ namespace data
                 }
                 catch (Exception e) { Console.WriteLine(e.ToString()); }
 
-                _updateCoordinate(stock.Coordinate, true);
+                if (count > 0)
+                    _updateCoordinate(stock.Coordinate, true);
             }
             return count;
         }
@@ -546,6 +626,45 @@ namespace data
             return count;
         }
 
+        private void _updateNotQCCoordinate(NotQCOrder order, bool isRemove)
+        {
+            try
+            {
+                using (OleDbCommand cmd = new OleDbCommand("select * from notqccoordinate where box = @bx", m_connection))
+                {
+                    cmd.Parameters.AddWithValue("bx", order.BoxNo);
+                    string newplace = null;
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            if (isRemove)
+                                newplace = (reader["coo"] as string).Replace(order.Coordinate + ",", "");
+                            else
+                                newplace = ((reader["coo"]as string)??"") + order.Coordinate + ",";
+                        }
+                    }
+                    if (newplace != null)
+                    {
+                        cmd.Parameters.Clear();
+                        cmd.CommandText = "update notqccoordinate set coo = @np where [box] = @pt";
+                        cmd.Parameters.AddWithValue("np", newplace);
+                        cmd.Parameters.AddWithValue("pt", order.BoxNo);
+                        cmd.ExecuteNonQuery();
+                    }
+                    else if (!isRemove)
+                    {
+                        cmd.Parameters.Clear();
+                        cmd.CommandText = "insert into notqccoordinate ([box],coo) values(@box,@ppt)";
+                        cmd.Parameters.AddWithValue("box", order.BoxNo);
+                        cmd.Parameters.AddWithValue("ppt", order.Coordinate + ",");
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+        }
+
         /// <summary>
         /// 更新数据库坐标
         /// </summary>
@@ -573,7 +692,7 @@ namespace data
                             if (isRemove)
                                 newplace = (reader["coo"] as string).Replace(place + ",", "");
                             else
-                                newplace = _getNewPlace(reader["coo"] as string, place);
+                                newplace = ((reader["coo"] as string) ?? "") + place + ",";
                         }
                     }
                     if (newplace != null)
@@ -589,36 +708,12 @@ namespace data
                         cmd.Parameters.Clear();
                         cmd.CommandText = "insert into coordinate (plate,coo) values(@pt,@ppt)";
                         cmd.Parameters.AddWithValue("np", plate);
-                        cmd.Parameters.AddWithValue("pt", place);
+                        cmd.Parameters.AddWithValue("pt", place+",");
                         cmd.ExecuteNonQuery();
                     }
                 }
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
-        }
-
-        // 获取排序后的新字符串，注意，这里的排序有瑕疵（根据字符串排序，以后改进）
-        private string _getNewPlace(string v, string place)
-        {
-            StringBuilder buder = new StringBuilder();
-            bool isInserted = false;
-            int i, j = 0;
-            while (true)
-            {
-                i = v.IndexOf(',', j);
-                if (i < 0) break;
-                string str = v.Substring(j, i - j);
-                if (!isInserted && place.CompareTo(str) < 0)
-                {
-                    buder.Append(place).Append(',');
-                    isInserted = true;
-                }
-                buder.Append(str).Append(',');
-                j = i + 1;
-            }
-            if (!isInserted)
-                buder.Append(place).Append(',');
-            return buder.ToString();
         }
 
         // 从数据库读取数据
@@ -722,6 +817,29 @@ namespace data
             if (!reader.IsDBNull(o))
                 return reader.GetString(o);
             return "";
+        }
+
+        // 获得字符串中最大的数字
+        public static double GetMaxValue(string str)
+        {
+            if (string.IsNullOrWhiteSpace(str)) return 0;
+            str += '\0';
+            double value = 0;
+            int index = 0;
+            for (int len = 0; len < str.Length; ++len)
+            {
+                char c = str[len];
+                if ((c < '0' || c > '9') && c != '.')
+                {
+                    if (len > index)
+                    {
+                        double d = 0;
+                        value = (double.TryParse(str.Substring(index, len - index), out d) && d > value) ? d : value;
+                    }
+                    index = len + 1;
+                }
+            }
+            return value;
         }
     }
 }

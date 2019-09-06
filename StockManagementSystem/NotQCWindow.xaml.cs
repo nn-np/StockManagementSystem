@@ -179,5 +179,19 @@ namespace StockManagementSystem
         {
             mTBMain.Clear();
         }
+        /// <summary>
+        /// 坐标
+        /// </summary>
+        private void click_coordinate(object sender, RoutedEventArgs e)
+        {
+            new Thread(_outputCoordinate).Start();
+        }
+
+        private void _outputCoordinate()
+        {
+            _statusBarState("正在读取...", true);
+            mManager.OutputNotQCCoordinate();
+            _statusBarState("就绪", false);
+        }
     }
 }

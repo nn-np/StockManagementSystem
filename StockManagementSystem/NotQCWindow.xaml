@@ -26,13 +26,28 @@
         <TextBox x:Name="mTBMain" Grid.Row="1" TextWrapping="Wrap" Margin="5,5,0,5" AcceptsReturn="True" TextChanged="m_textcanged" MouseDoubleClick="tb_doubleclick" AcceptsTab="True"/>
         <Grid Grid.Column="1" Grid.Row="1" Margin="0,5,0,0" MinWidth="159">
             <Grid.RowDefinitions>
-                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
+            <Button Margin="5,0" Click="click_coordinate" VerticalAlignment="Bottom" HorizontalContentAlignment="Left" Padding="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="5*"/>
+                    </Grid.ColumnDefinitions>
+                    <ContentControl Template="{StaticResource bt_output}" Margin="3,3,0,3" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Margin="5,0,0,0">
+                        <Run FontSize="16" Language="zh-cn">可用坐标</Run>
+                        <LineBreak/>
+                        <Run Language="zh-cn" Foreground="#FF373737">导出可以使用的坐标</Run>
+                    </TextBlock>
+                </Grid>
+            </Button>
+            
             <Button Grid.Row="2" Margin="5" Click="click_alldata" VerticalAlignment="Bottom" HorizontalContentAlignment="Left" Padding="1">
                 <Grid>
                     <Grid.ColumnDefinitions>
