@@ -728,6 +728,12 @@ namespace data
 
         private void init()
         {
+            /*
+            string url = "";
+            string password = "Jet OLEDB:Database Password=4919.skFI;";
+            int version = 12;
+            string connstr = $"Provider=Microsoft.ACE.OLEDB.{version}.0;Data Source={url};Persist Security Info=False;{password}";
+             * */
             ++initcount;
             IsValid = true;
 #if (DEBUG)
