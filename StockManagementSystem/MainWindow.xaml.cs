@@ -45,11 +45,17 @@ namespace StockManagementSystem
                 run.FontSize = 24;
                 mTBTitle.Text = "";
                 mTBTitle.Inlines.Add(run);
-                Run run2 = new Run("输入OrderID、WorkNo或库存坐标进行搜索");
+                Run run2 = new Run("输入[Order ID]、[Wo No.]或[坐标]进行搜索");
                 run2.FontSize = 16;
                 run2.FontWeight = FontWeights.Thin;
                 mTBTitle.Inlines.Add(new LineBreak());
                 mTBTitle.Inlines.Add(run2);
+
+                mBTSearchNotQC.Visibility = Visibility.Visible;
+                mBTSearchStock.Visibility = Visibility.Visible;
+                mBTSearch.Visibility = Visibility.Collapsed;
+                mBTSubmit.Visibility = Visibility.Collapsed;
+                mBTCoordinate.Visibility = Visibility.Collapsed;
             }
             _statusBarState("正在初始化...", true);
         }
@@ -120,6 +126,7 @@ namespace StockManagementSystem
 
         private void _submit()
         {
+            StringBuilder errorstr = new StringBuilder();
             TextBoxUpdate update = new TextBoxUpdate(_textBoxUpdate);
             this.Dispatcher.Invoke(update, "\n\n--------------\n");
             int counts = 0, successcount = 0;
@@ -132,22 +139,30 @@ namespace StockManagementSystem
                 if (stock.IsAvailable)
                 {
                     int count = m_manager.Submit(stock);
-                    string showStr = _getSubmitFeedback(v, stock, count);
+                    string showStr = _getSubmitFeedback(v, stock, count,errorstr);
                     if (count > 0) ++successcount;
                     this.Dispatcher.Invoke(update, showStr);
                 }
                 else
+                {
                     this.Dispatcher.Invoke(update, v.TrimEnd() + "\t---\t数据无效\n");
+                    errorstr.Append(v.TrimEnd()).Append("\t---\t数据无效\n");
+                }
             }
             this.Dispatcher.Invoke(update, $"--------------\n总计/成功/失败  {counts}/{successcount}/{counts - successcount}（条） nnns\n");
             submitStr = "";
             _statusBarState("就绪", false);
 
+            if (!string.IsNullOrWhiteSpace(errorstr.ToString()))
+            {
+                WarnWindow.ShowMessage(errorstr.ToString());
+            }
+
             // 每次更新结束后检查是否需要备份数据库
             _checkBackup();
         }
 
-        private string _getSubmitFeedback(string subStr,NnStock stock,int count)
+        private string _getSubmitFeedback(string subStr,NnStock stock,int count, StringBuilder errorstr)
         {
             string showStr = subStr.TrimEnd() + "\t---\t";
             switch (stock.State)
@@ -171,7 +186,7 @@ namespace StockManagementSystem
                 switch (stock.State)
                 {
                     case NnStock.StockState.Insert:
-                        showStr += "添加失败，记录已存在\n";
+                        showStr += "失败，记录已存在\n";
                         break;
                     case NnStock.StockState.Update:
                         showStr += "失败，记录不存在\n";
@@ -180,6 +195,7 @@ namespace StockManagementSystem
                         showStr += "失败，记录不存在\n";
                         break;
                 }
+                errorstr.Append(showStr);
             }
             return showStr;
         }
@@ -302,6 +318,23 @@ namespace StockManagementSystem
         private void tb_doubleclick(object sender, MouseButtonEventArgs e)
         {
             m_tb.Clear();
+        }
+
+        /// <summary>
+        /// 搜索半纯品
+        /// </summary>
+        private void click_searchNotQc(object sender, RoutedEventArgs e)
+        {
+            new Thread(_searchNotQC).Start(m_tb.Text);
+        }
+
+        private void _searchNotQC(object o)
+        {
+            string str = o as string;
+            if (string.IsNullOrWhiteSpace(str)) return;
+            _statusBarState("正在搜索...", true);
+            m_manager.SearchNotQCData(str);
+            _statusBarState("就绪", false);
         }
     }
 }

@@ -26,16 +26,12 @@ namespace data
         {
             if (string.IsNullOrWhiteSpace(allInfo)) return;
             string[] strs = allInfo.Split('\t');
-            if (strs.Length > 0)
-                WorkNoString = strs[0].TrimEnd();
-            if (strs.Length > 1)
-                OrderId = strs[1].TrimEnd();
-            if (strs.Length > 2)
-                QualitySum = strs[2].TrimEnd();
-            if (strs.Length > 3)
-                Cause = strs[3].TrimEnd();
-            if (strs.Length > 4)
-                Coordinate = strs[4].TrimEnd();
+            if (strs.Length < 5) return;
+            WorkNoString = strs[0].TrimEnd();
+            OrderId = strs[1].TrimEnd();
+            QualitySum = strs[2].TrimEnd();
+            Cause = strs[3].TrimEnd();
+            Coordinate = strs[4].TrimEnd();
             if (strs.Length > 5)
                 PurityString = strs[5].TrimEnd();
             if (strs.Length > 6)

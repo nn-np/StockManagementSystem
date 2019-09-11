@@ -105,7 +105,7 @@ namespace StockManagementSystem
             if (mManager.IsPassed(userName.Text, NnConnection.GetMD5String(password.Password)))
             {
                 _updateConfiguration("lastUser", userName.Text);
-                Window window = null;
+                Window window;
                 if (isStock)
                 {
                     window = new MainWindow(true);

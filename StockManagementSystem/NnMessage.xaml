@@ -9,7 +9,7 @@
         Title="NnMessage" Height="139" Width="332" ShowInTaskbar="False" AllowsTransparency="True" WindowStyle="None" Background="#00000000" Topmost="True" Loaded="window_loaded">
 
     <Window.Effect>
-        <DropShadowEffect ShadowDepth="7" BlurRadius="7"/>
+        <DropShadowEffect BlurRadius="7" ShadowDepth="0" RenderingBias="Quality"/>
     </Window.Effect>
 
     <Grid>

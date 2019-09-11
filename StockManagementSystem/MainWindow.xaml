@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:StockManagementSystem"
         mc:Ignorable="d"
         Title="StorkManagementSystem" Height="450" Width="800" MinWidth="800" MinHeight="450" WindowStartupLocation="CenterScreen" Activated="m_activited">
-    
+
     <Grid Background="#FFEEEEF2">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="4*"></ColumnDefinition>
@@ -17,18 +17,24 @@
             <RowDefinition></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
-        <TextBlock x:Name="mTBTitle" Margin="12,12,0,7">
+        <TextBlock x:Name="mTBTitle" Margin="12,12,0,7" Grid.ColumnSpan="2">
             <Run FontSize="24" Language="zh-cn">多肽库存管理系统</Run>
             <LineBreak/>
-            <Run FontSize="16" FontWeight="Thin" Language="zh-cn">用于提交库存信息或输入OrderID、WorkNo或库存坐标进行搜索</Run>
+            <Run FontWeight="Thin" Text="用于提交库存信息或输入[OrderID]、[WoNo]或[坐标]进行搜索，提交格式：[WoNo]+[OrderID]+[质量]+[原因]+[坐标]+[纯度]+[分子量]+[备注]"/>
+            <LineBreak/>
+            <Run Text="提示：[坐标]不能为空值或者重复。提交时[原因]如果不为空则移除数据"/>
         </TextBlock>
         <TextBox x:Name="m_tb" Grid.Row="1" TextWrapping="Wrap" Margin="5,5,0,5" AcceptsReturn="True" TextChanged="m_textcanged" MouseDoubleClick="tb_doubleclick" AcceptsTab="True"/>
         <Grid Grid.Column="1" Grid.Row="1" Margin="0,5,0,0" MinWidth="159">
             <Grid.RowDefinitions>
-                <RowDefinition Height="4*"></RowDefinition>
-                <RowDefinition Height="7*"></RowDefinition>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
             </Grid.RowDefinitions>
-            <Button Margin="5,0" Click="click_coordinate" VerticalAlignment="Bottom" HorizontalContentAlignment="Left" Padding="1">
+            <Button x:Name="mBTCoordinate"  Grid.Row="1" Margin="5" Click="click_coordinate" VerticalAlignment="Bottom" HorizontalContentAlignment="Left" Padding="1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1*"/>
@@ -42,37 +48,64 @@
                     </TextBlock>
                 </Grid>
             </Button>
-            <StackPanel Grid.Row="1" VerticalAlignment="Bottom" Margin="0,0,0,32">
-                <Button x:Name="mBTSubmit" Margin="5,0" Click="click_submit" HorizontalContentAlignment="Left" Padding="1">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="5*"/>
-                        </Grid.ColumnDefinitions>
-                        <ContentControl Template="{StaticResource bt_submit}" Margin="3,3,0,3" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Margin="5,0,0,0">
+            <Button Grid.Row="3" x:Name="mBTSubmit" Margin="5" Click="click_submit" HorizontalContentAlignment="Left" Padding="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="5*"/>
+                    </Grid.ColumnDefinitions>
+                    <ContentControl Template="{StaticResource bt_submit}" Margin="3,3,0,3" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Margin="5,0,0,0">
                             <Run FontSize="16" Language="zh-cn">提 交</Run>
                             <LineBreak/>
                             <Run Language="zh-cn" Foreground="#FF373737">提交所有更改</Run>
-                        </TextBlock>
-                    </Grid>
-                </Button>
-                <Button Margin="5,17,5,0" Click="click_search" HorizontalContentAlignment="Left" Padding="1">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="5*"/>
-                        </Grid.ColumnDefinitions>
-                        <ContentControl Template="{StaticResource bt_search}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,3,0,3"/>
-                        <TextBlock Grid.Column="1" Margin="5,0,0,0">
+                    </TextBlock>
+                </Grid>
+            </Button>
+            <Button x:Name="mBTSearch" Grid.Row="4" Margin="5" Click="click_search" HorizontalContentAlignment="Left" Padding="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="5*"/>
+                    </Grid.ColumnDefinitions>
+                    <ContentControl Template="{StaticResource bt_search}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,3,0,3"/>
+                    <TextBlock Grid.Column="1" Margin="5,0,0,0">
                             <Run FontSize="16" Language="zh-cn">搜 索</Run>
                             <LineBreak/>
                             <Run Language="zh-cn" Foreground="#FF373737">在所有数据中搜索</Run>
-                        </TextBlock>
-                    </Grid>
-                </Button>
-            </StackPanel>
+                    </TextBlock>
+                </Grid>
+            </Button>
+            <Button x:Name="mBTSearchStock" Grid.Row="3" Margin="5" Click="click_search" HorizontalContentAlignment="Left" Padding="1" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="5*"/>
+                    </Grid.ColumnDefinitions>
+                    <ContentControl Template="{StaticResource bt_search}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,3,0,3"/>
+                    <TextBlock Grid.Column="1" Margin="5,0,0,0">
+                            <Run FontSize="16" Language="zh-cn">搜索库存</Run>
+                            <LineBreak/>
+                            <Run Language="zh-cn" Foreground="#FF373737">在库存中搜索</Run>
+                    </TextBlock>
+                </Grid>
+            </Button>
+            <Button x:Name="mBTSearchNotQC" Grid.Row="4" Margin="5" Click="click_searchNotQc" HorizontalContentAlignment="Left" Padding="1" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="5*"/>
+                    </Grid.ColumnDefinitions>
+                    <ContentControl Template="{StaticResource bt_search}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,3,0,3"/>
+                    <TextBlock Grid.Column="1" Margin="5,0,0,0">
+                            <Run FontSize="16" Language="zh-cn">搜索半纯品</Run>
+                            <LineBreak/>
+                            <Run Language="zh-cn" Foreground="#FF373737">在半纯品库中搜索</Run>
+                    </TextBlock>
+                </Grid>
+            </Button>
         </Grid>
+
         <StatusBar x:Name="st_bar" Grid.RowSpan="2" Grid.Row="2" Grid.ColumnSpan="2" Background="#FF007ACC">
             <StatusBarItem Margin="5,0,0,0">
                 <TextBlock x:Name="st_tbstate" Text="就绪" Foreground="White"/>

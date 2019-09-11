@@ -17,11 +17,10 @@ namespace data
     public class NnStockManager
     {
         private OleDbConnection m_connection;// 数据库
-        private Configuration m_configuration;// 配置文件读写
         private StreamWriter m_writer;// 用于写入数据到文件
         string m_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\nnns\";
 
-        private int initcount = 0;
+        //private int initcount = 0;
 
         //弹出通知窗口（通知窗口有两种，一种自动消失（表示提示,isWarning为false），一种需要手动关闭（表示信息重要，必须引起客户重视，isWarning为true））
         public delegate void NnShowMessage(string message, bool isWarning);
@@ -128,10 +127,10 @@ namespace data
                 }
                 return (int)(GetMaxValue(x.Coordinate)- GetMaxValue(y.Coordinate));
             });
-            sb.Append("盒号").Append(',').Append("坐标").Append('\n');
+            sb.Append("坐标").Append('\n');
             foreach (var v in list)
             {
-                sb.Append(v.Plate).Append(',').Append(v.Coordinate).Append('\n');
+                sb.Append(v.Plate).Append('-').Append(v.Coordinate).Append('\n');
             }
             _writeToFileAndOpen(sb.ToString());
         }
@@ -281,25 +280,16 @@ namespace data
             return sb.ToString();
         }
 
-        private NnStock _getNnStcokFromReader(OleDbDataReader reader,bool isNew)
+        private NnStock _getNnStcokFromReader(OleDbDataReader reader, bool isNew)
         {
             NnStock stock = new NnStock();
-            int ordinal;
             try
             {
                 stock.OrderId = GetStringFromDb(reader, "orderId");
-                ordinal = reader.GetOrdinal("workNo");
-                if (!reader.IsDBNull(ordinal))
-                    stock.WorkNo = reader.GetInt32(ordinal);
-                ordinal = reader.GetOrdinal("quality");
-                if (!reader.IsDBNull(ordinal))
-                    stock.Quality = reader.GetDouble(ordinal);
-                ordinal = reader.GetOrdinal("purity");
-                if (!reader.IsDBNull(ordinal))
-                    stock.Purity = reader.GetDouble(ordinal);
-                ordinal = reader.GetOrdinal("mw");
-                if (!reader.IsDBNull(ordinal))
-                    stock.Mw = (double)reader["mw"];
+                stock.WorkNo = GetIntFromDb(reader, "workNo");
+                stock.Quality = GetDoubleFromDb(reader, "quality");
+                stock.Purity = GetDoubleFromDb(reader, "purity");
+                stock.Mw = GetDoubleFromDb(reader, "mw");
                 if (isNew)
                 {
                     stock.DateAdd = GetDateTiemFromDb(reader, "_date");
@@ -358,16 +348,16 @@ namespace data
             int count = 0;
             try
             {
-                using (OleDbCommand cmd = new OleDbCommand("UPDATE notqc SET DateRemove=@dr,Coordinate=notqc.ID,Comments=@cs,WorkNoRemove=@wr WHERE Coordinate=@cd", m_connection))
+                using (OleDbCommand cmd = new OleDbCommand("UPDATE notqc SET DateRemove=@dr,Coordinate=notqc.ID,Comments=@cs,Cause=@cu WHERE Coordinate=@cd", m_connection))
                 {
                     cmd.Parameters.AddWithValue("dr", DateTime.Now.ToString());
                     cmd.Parameters.AddWithValue("cs", order.Comments);
-                    cmd.Parameters.AddWithValue("wr", order.RemoveWorkNo);
-                    cmd.Parameters.AddWithValue("cd", order.RCoordinate);
+                    cmd.Parameters.AddWithValue("cu", order.Cause);
+                    cmd.Parameters.AddWithValue("cd", order.Coordinate);
                     count = cmd.ExecuteNonQuery();
                 }
                 if (count > 0)
-                    _updateNotQCCoordinate(order, false);
+                    _updateNotQCCoordinate(order.Coordinate, false);
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
             return count;
@@ -384,12 +374,12 @@ namespace data
                     cmd.Parameters.AddWithValue("wn", order.WorkNo);
                     cmd.Parameters.AddWithValue("oi", order.OrderId);
                     cmd.Parameters.AddWithValue("qt", order.Quality);
-                    cmd.Parameters.AddWithValue("cd", order.RCoordinate);
+                    cmd.Parameters.AddWithValue("cd", order.Coordinate);
                     cmd.Parameters.AddWithValue("cm", order.Comments);
                     count = cmd.ExecuteNonQuery();
                 }
                 if (count > 0)
-                    _updateNotQCCoordinate(order,true);
+                    _updateNotQCCoordinate(order.Coordinate, true);
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
             return count;
@@ -397,13 +387,11 @@ namespace data
 
         internal void AllNotQCData()
         {
-            StringBuilder sbold = new StringBuilder();
-            sbold.Append("日期").Append(',').Append("盒号").Append(',').Append("WO号").Append(',').Append("ID").Append(',')
-                .Append("质量").Append(',').Append("坐标").Append(',').Append("备注").Append(',').Append("取走日期").Append(',').Append("取走wo号\n");
-
             StringBuilder sbnew = new StringBuilder();
-            sbnew.Append("日期").Append(',').Append("盒号").Append(',').Append("WO号").Append(',').Append("ID").Append(',')
-                .Append("质量").Append(',').Append("坐标").Append(',').Append("备注\n");
+            sbnew.Append("日期,WO号,Order ID,质量,坐标,备注\n");
+
+            StringBuilder sbold = new StringBuilder();
+            sbold.Append("日期,WO号,Order ID,质量,坐标,备注,取走日期,原因\n");
             try
             {
                 using (OleDbCommand cmd = new OleDbCommand("SELECT * FROM notqc ORDER BY Coordinate DESC", m_connection))
@@ -416,7 +404,7 @@ namespace data
                             od.InitNotQCOrderByDB(reader);
                             if (od.State == NotQCOrder.NotQCState.Insert)
                             {
-                                sbnew.Append(od.NewDataString);
+                                sbnew.Append(od.ToString());
                             }
                             else
                             {
@@ -432,13 +420,11 @@ namespace data
 
         internal void SearchNotQCData(string str)
         {
-            StringBuilder sbold = new StringBuilder();
-            sbold.Append("搜索关键字").Append(',').Append("日期").Append(',').Append("盒号").Append(',').Append("WO号").Append(',').Append("ID").Append(',')
-                .Append("质量").Append(',').Append("坐标").Append(',').Append("备注").Append(',').Append("取走日期").Append(',').Append("取走wo号\n");
-
             StringBuilder sbnew = new StringBuilder();
-            sbnew.Append("搜索关键字").Append(',').Append("日期").Append(',').Append("盒号").Append(',').Append("WO号").Append(',').Append("ID").Append(',')
-                .Append("质量").Append(',').Append("坐标").Append(',').Append("备注\n");
+            sbnew.Append("搜索关键字,日期,WO号,Order ID,质量,坐标,备注\n");
+
+            StringBuilder sbold = new StringBuilder();
+            sbold.Append("搜索关键字,日期,WO号,Order ID,质量,坐标,备注,取走日期,原因\n");
 
             try
             {
@@ -450,20 +436,21 @@ namespace data
                     {
                         if (string.IsNullOrWhiteSpace(v)) continue;
                         cmd.Parameters.Clear();
-                        if (v.Contains("/"))// 坐标
+                        int flg = v.IndexOf('-');
+                        if (flg < 0)
+                        {
+                            cmd.CommandText = "SELECT * FROM notqc WHERE WorkNo=@wn";
+                            cmd.Parameters.AddWithValue("wn", v.TrimEnd());
+                        }
+                        else if (flg < 7)// 坐标
                         {
                             cmd.CommandText = "SELECT * FROM notqc WHERE Coordinate=@cd";
                             cmd.Parameters.AddWithValue("cd", v.TrimEnd());
                         }
-                        else if (v.Contains("-"))// OrderID
+                        else// OrderID
                         {
                             cmd.CommandText = "SELECT * FROM notqc WHERE OrderId=@id";
                             cmd.Parameters.AddWithValue("id", v.TrimEnd());
-                        }
-                        else
-                        {
-                            cmd.CommandText = "SELECT * FROM notqc WHERE WorkNo=@wn";
-                            cmd.Parameters.AddWithValue("wn", v.TrimEnd());
                         }
                         using (OleDbDataReader reader = cmd.ExecuteReader())
                         {
@@ -480,7 +467,7 @@ namespace data
                                     if (!isNewFirst)
                                         sbnew.Append("").Append(',');
                                     isNewFirst = false;
-                                    sbnew.Append(od.NewDataString);
+                                    sbnew.Append(od.ToString());
                                 }
                                 else
                                 {
@@ -626,22 +613,26 @@ namespace data
             return count;
         }
 
-        private void _updateNotQCCoordinate(NotQCOrder order, bool isRemove)
+        private void _updateNotQCCoordinate(string coordinate, bool isRemove)
         {
             try
             {
+                int index = coordinate.IndexOf('-');
+                if (index < 0) return;
+                string box= coordinate.Substring(0, index);
+                string place = coordinate.Substring(index + 1, coordinate.Length - index - 1);
                 using (OleDbCommand cmd = new OleDbCommand("select * from notqccoordinate where box = @bx", m_connection))
                 {
-                    cmd.Parameters.AddWithValue("bx", order.BoxNo);
+                    cmd.Parameters.AddWithValue("bx", box);
                     string newplace = null;
                     using (OleDbDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
                             if (isRemove)
-                                newplace = (reader["coo"] as string).Replace(order.Coordinate + ",", "");
+                                newplace = (reader["coo"] as string).Replace(place + ",", "");
                             else
-                                newplace = ((reader["coo"]as string)??"") + order.Coordinate + ",";
+                                newplace = ((reader["coo"]as string)??"") + place + ",";
                         }
                     }
                     if (newplace != null)
@@ -649,15 +640,15 @@ namespace data
                         cmd.Parameters.Clear();
                         cmd.CommandText = "update notqccoordinate set coo = @np where [box] = @pt";
                         cmd.Parameters.AddWithValue("np", newplace);
-                        cmd.Parameters.AddWithValue("pt", order.BoxNo);
+                        cmd.Parameters.AddWithValue("pt", box);
                         cmd.ExecuteNonQuery();
                     }
                     else if (!isRemove)
                     {
                         cmd.Parameters.Clear();
                         cmd.CommandText = "insert into notqccoordinate ([box],coo) values(@box,@ppt)";
-                        cmd.Parameters.AddWithValue("box", order.BoxNo);
-                        cmd.Parameters.AddWithValue("ppt", order.Coordinate + ",");
+                        cmd.Parameters.AddWithValue("box", box);
+                        cmd.Parameters.AddWithValue("ppt", place + ",");
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -728,74 +719,83 @@ namespace data
 
         private void init()
         {
-            /*
-            string url = "";
-            string password = "Jet OLEDB:Database Password=4919.skFI;";
-            int version = 12;
-            string connstr = $"Provider=Microsoft.ACE.OLEDB.{version}.0;Data Source={url};Persist Security Info=False;{password}";
-             * */
-            ++initcount;
             IsValid = true;
 #if (DEBUG)
-            m_connection = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Users\pepuser\Desktop\polypeptideInfo.accdb;Persist Security Info=False;Jet OLEDB:Database Password=4919.skFI");
+            m_connection = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.16.0;Data Source=C:\Users\pepuser\Desktop\polypeptideInfo.accdb;Persist Security Info=False;Jet OLEDB:Database Password=4919.skFI");
             m_connection.Open();
-#else
-            m_configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            string connectionStr = null;
-            // 如果第一次初始化失败，第二次初始化时直接从网络获取数据库连接字符串
-            if (initcount < 2 && m_configuration.AppSettings.Settings["stock_connection"] != null)
-            {
-                connectionStr = m_configuration.AppSettings.Settings["stock_connection"].Value;
-            }
-            else
-            {
-                connectionStr = GetStringFromService("stock_connection");
-                if (connectionStr == null)
-                {
-                    ShowMessage?.Invoke("配置文件错误！", true);
-                    IsValid = false;
-                    return;
-                }
-            }
+            DatabasePath = @"C:\Users\pepuser\Desktop\polypeptideInfo.accdb";
+#elif (CUSTOMER)
+            string path = @"\\c11w16fs01.genscript.com\int_17005\化学部\内部\分装发货信息\分装常用表格 备份\库存软件\polypeptideInfo.accdb";
+            DatabasePath = path;
+            string password= "cgxB1WJe7pU46KD5jpW/GQ==";
             try
             {
-                string str = NnConnection.NnDecrypt(connectionStr);
-                m_connection = new OleDbConnection(str);
-                m_connection.Open();
-                int i = str.IndexOf("Data Source=") + 12;
-                int len = str.IndexOf(";", i) - i;
-                len = len > 0 ? len : str.Length - i;
-                DatabasePath = str.Substring(i, len);
+                password = $"Jet OLEDB:Database Password={NnConnection.NnDecrypt(password)};";
             }
-            catch
+            catch (Exception e)
             {
-                if (initcount < 2)
-                    init();
-                else
+                Console.WriteLine(e.ToString());
+                ShowMessage?.Invoke("数据库错误！", true);
+                IsValid = false;
+                return;
+            }
+            int version = 12;
+            while (version < 21)
+            {
+                string connstr = $"Provider=Microsoft.ACE.OLEDB.{version}.0;Data Source={path};Persist Security Info=False;{password}";
+                try
                 {
-                    ShowMessage?.Invoke("数据库连接错误！建议检查数据库文件是否被改动。", true);
-                    IsValid = false;
+                    m_connection = new OleDbConnection(connstr);
+                    m_connection.Open();
                     return;
                 }
-            }
-#endif
-        }
+                catch (Exception e) { Console.WriteLine(e.ToString() + "\n" + version); }
 
-        // 从网络获取配置信息
-        private string GetStringFromService(string v)
-        {
+                ++version;
+            }
+
+            ShowMessage?.Invoke("数据库连接错误！建议检查数据库文件是否被改动。", true);
+            IsValid = false;
+            
+#else
+            string path = ConfigurationManager.AppSettings["stock_path"];
+            DatabasePath = path;
+            string password= ConfigurationManager.AppSettings["stock_psd"];
+            if (path == null || password == null)
+            {
+                ShowMessage?.Invoke("配置文件错误，无法继续！", true);
+                IsValid = false;
+                return;
+            }
             try
             {
-                string result = NnConnection.GetString(v);
-                if (result == null) return null;
-                if (m_configuration.AppSettings.Settings[v] == null)
-                    m_configuration.AppSettings.Settings.Add(v, result);
-                else
-                    m_configuration.AppSettings.Settings[v].Value = result;
-                m_configuration.Save();
-                return result;
+                password = $"Jet OLEDB:Database Password={NnConnection.NnDecrypt(password)};";
             }
-            catch { Console.WriteLine("获取网络数据错误"); return null; }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                ShowMessage?.Invoke("数据库错误！", true);
+                IsValid = false;
+                return;
+            }
+            int version = 12;
+            while (version < 21)
+            {
+                string connstr = $"Provider=Microsoft.ACE.OLEDB.{version}.0;Data Source={path};Persist Security Info=False;{password}";
+                try
+                {
+                    m_connection = new OleDbConnection(connstr);
+                    m_connection.Open();
+                    return;
+                }
+                catch (Exception e) { Console.WriteLine(e.ToString() + "\n" + version); }
+
+                ++version;
+            }
+
+            ShowMessage?.Invoke("数据库连接错误！建议检查数据库文件是否被改动。", true);
+            IsValid = false;
+#endif
         }
 
         ~NnStockManager()
@@ -809,6 +809,21 @@ namespace data
             catch { }
         }
 
+        public static int GetIntFromDb(OleDbDataReader reader, string key)
+        {
+            int o = reader.GetOrdinal(key);
+            if (!reader.IsDBNull(o))
+                return reader.GetInt32(o);
+            return 0;
+        }
+
+        public static double GetDoubleFromDb(OleDbDataReader reader, string key)
+        {
+            int o = reader.GetOrdinal(key);
+            if (!reader.IsDBNull(o))
+                return reader.GetDouble(o);
+            return 0;
+        }
         public static DateTime GetDateTiemFromDb(OleDbDataReader reader, string key)
         {
             int o = reader.GetOrdinal(key);
@@ -839,7 +854,7 @@ namespace data
                 {
                     if (len > index)
                     {
-                        double d = 0;
+                        double d;
                         value = (double.TryParse(str.Substring(index, len - index), out d) && d > value) ? d : value;
                     }
                     index = len + 1;

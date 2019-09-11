@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:StockManagementSystem"
         mc:Ignorable="d"
-        Title="半纯品数据" Height="450" Width="800" Activated="m_activited">
+        Title="半纯品数据" Height="450" Width="800" Activated="m_activited" WindowStartupLocation="CenterScreen">
     <Grid Background="#FFEEEEF2">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="4*"></ColumnDefinition>
@@ -19,9 +19,9 @@
         <TextBlock Grid.ColumnSpan="2" x:Name="mTBTitle" Margin="12,12,0,7">
             <Run FontSize="24" Language="zh-cn">多肽半纯品数据管理</Run>
             <LineBreak/>
-            <Run FontWeight="Thin" Text="用于提交半纯品数据或输入[OrderID]、[WorkNo]、[盒号/坐标]搜索，提交格式：[盒号]+[WoNo+OrderID]+[质量]+[坐标]+[备注]+[取走WoNo]"/>
+            <Run FontWeight="Thin" Text="用于提交半纯品数据或输入[Order ID]、[WoNo]或[坐标]搜索，提交格式：[WoNo]+[Order ID]+[质量]+[原因]+[坐标]+[]+[]+[备注]"/>
             <LineBreak/>
-            <Run Text="提示：[盒号]，[坐标]，[Order ID]三个字段必须要有，否则有可能(肯定会)提交失败。提交时[取走WoNo]如果不为空则移除数据"/>
+            <Run Text="提示：[坐标]不能为空值或者重复。提交时[原因]如果不为空则移除数据"/>
         </TextBlock>
         <TextBox x:Name="mTBMain" Grid.Row="1" TextWrapping="Wrap" Margin="5,5,0,5" AcceptsReturn="True" TextChanged="m_textcanged" MouseDoubleClick="tb_doubleclick" AcceptsTab="True"/>
         <Grid Grid.Column="1" Grid.Row="1" Margin="0,5,0,0" MinWidth="159">

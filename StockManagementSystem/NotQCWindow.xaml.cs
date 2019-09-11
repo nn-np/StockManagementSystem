@@ -71,6 +71,7 @@ namespace StockManagementSystem
 
         private void _submit(object o)
         {
+            StringBuilder errorstr = new StringBuilder();
             _updateTBMain("\n\n--------------\n");
             string value = o as string;
             if (value == null) return;
@@ -85,18 +86,26 @@ namespace StockManagementSystem
                 if (order.IsAvailable)
                 {
                     int count = mManager.SubmitNotQCOrder(order);
-                    string showStr = _getSubmitFeedback(v, order, count);
+                    string showStr = _getSubmitFeedback(v, order, count, errorstr);
                     if (count > 0) ++successcount;
                     _updateTBMain(showStr);
                 }
                 else
+                {
                     _updateTBMain(v.TrimEnd() + "\t---\t数据无效\n");
+                    errorstr.Append(v.TrimEnd()).Append("\t---\t数据无效\n");
+                }
             }
             _updateTBMain($"--------------\n总计/成功/失败  {counts}/{successcount}/{counts - successcount}（条） nnns\n");
             _statusBarState("就绪", false);
+
+            if (!string.IsNullOrWhiteSpace(errorstr.ToString()))
+            {
+                WarnWindow.ShowMessage(errorstr.ToString());
+            }
         }
 
-        private string _getSubmitFeedback(string subStr, NotQCOrder order, int count)
+        private string _getSubmitFeedback(string subStr, NotQCOrder order, int count, StringBuilder errorstr)
         {
             string showStr = subStr.TrimEnd() + "\t---\t";
             switch (order.State)
@@ -117,12 +126,13 @@ namespace StockManagementSystem
                 switch (order.State)
                 {
                     case NotQCOrder.NotQCState.Insert:
-                        showStr += "添加失败，记录已存在\n";
+                        showStr += "失败，记录已存在\n";
                         break;
                     case NotQCOrder.NotQCState.Remove:
                         showStr += "失败，记录不存在\n";
                         break;
                 }
+                errorstr.Append(showStr);
             }
             return showStr;
         }
