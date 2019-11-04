@@ -46,11 +46,11 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\Desktop\StockManager_x86\</OutputPath>
-    <DefineConstants>TRACE;/CUSTOMER</DefineConstants>
+    <OutputPath>..\..\..\..\Desktop\StockManager_x64\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>res\m_ic.ico</ApplicationIcon>
