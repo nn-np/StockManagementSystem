@@ -477,6 +477,7 @@ namespace data
                                     sbold.Append(od.ToString());
                                 }
                             }
+                            if (isNewFirst) sbnew.Append('\n');
                             if (isFirst) sbold.Append('\n');
                         }
                     }
