@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.OleDb;
 using System.Linq;
 /**
  * 多肽类
@@ -25,6 +26,7 @@ namespace data
         public NnStock(string allInfo)
         {
             if (string.IsNullOrWhiteSpace(allInfo)) return;
+            OriginalString = allInfo.Trim();
             string[] strs = allInfo.Split('\t');
             if (strs.Length < 5) return;
             WorkNoString = strs[0].TrimEnd();
@@ -39,8 +41,8 @@ namespace data
             if (strs.Length > 7)
                 Comments = strs[7].TrimEnd();
         }
-
-        public string OrderId { get; set; }
+        private string orderid;
+        public string OrderId { get => orderid ?? ""; set => orderid = value; }
         public long WorkNo { get; set; }// workNo
         public string WorkNoString
         {
@@ -54,6 +56,10 @@ namespace data
                     WorkNo = -1;
             }
         }
+        /// <summary>
+        /// 原始数据
+        /// </summary>
+        public string OriginalString { get; set; }
         public double Quality { get => quality; set => quality = value; }
         public string QualityString { get => $"{quality}mg"; set => quality = getMaxValue(value); }// 这个是得到字符串中的最大值作为质量
         public string QualitySum { get => $"{quality}"; set => quality = getSumValue(value); }// 这个是得到字符串中数字的和作为质量
@@ -64,6 +70,9 @@ namespace data
         public string MwString { get => mw.ToString(); set => mw = getMaxValue(value); }
 
         // 判断一条数据是否有效，必须要有坐标，如果没有原因，则必须要有orderId或者workNo二者之一
+        /// <summary>
+        /// 是否有效
+        /// </summary>
         public bool IsAvailable { get => !string.IsNullOrWhiteSpace(Coordinate) && Coordinate.Contains('-'); }
         //public bool IsAvailable{ get => !string.IsNullOrWhiteSpace(Coordinate) && (!string.IsNullOrEmpty(Cause) || ((OrderId ?? "").Contains('-')) || WorkNo > 0); }
         //public bool IsAvailable { get => string.IsNullOrEmpty(Cause) ? ((OrderId ?? "").Contains('-') || WorkNo > 0) && (Coordinate ?? "").Contains('-') : (Coordinate ?? "").Contains('-'); }
@@ -175,6 +184,35 @@ namespace data
             Insert,
             Delete,
             Update
+        }
+        /// <summary>
+        /// 根据数据库初始化新的Stock
+        /// </summary>
+        internal void InitStockNewByDb(OleDbDataReader reader)
+        {
+            _initStockByDb(reader);
+            DateAdd = NnStockManager.GetDateTiemFromDb(reader, "_date");
+            Coordinate = NnStockManager.GetStringFromDb(reader, "coordinate");
+            Comments = NnStockManager.GetStringFromDb(reader, "comments");
+        }
+        /// <summary>
+        /// 根据数据库初始化已移除的Stock
+        /// </summary>
+        internal void InitStockOldByDb(OleDbDataReader reader)
+        {
+            _initStockByDb(reader);
+            DateAdd = NnStockManager.GetDateTiemFromDb(reader, "dateAdd");
+            DateRemove = NnStockManager.GetDateTiemFromDb(reader, "dateRemove");
+            Cause = NnStockManager.GetStringFromDb(reader, "cause");
+        }
+
+        private void _initStockByDb(OleDbDataReader reader)
+        {
+            OrderId = NnStockManager.GetStringFromDb(reader, "orderId");
+            WorkNo = NnStockManager.GetIntFromDb(reader, "workNo");
+            Quality = NnStockManager.GetDoubleFromDb(reader, "quality");
+            Purity = NnStockManager.GetDoubleFromDb(reader, "purity");
+            Mw = NnStockManager.GetDoubleFromDb(reader, "mw");
         }
     }
 }

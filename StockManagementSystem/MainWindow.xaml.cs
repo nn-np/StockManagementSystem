@@ -103,50 +103,43 @@ namespace StockManagementSystem
         // 提交库存按钮
         private void click_submit(object sender, RoutedEventArgs e)
         {
+            string str = m_tb.Text;
 #if (!DEBUG)
             if (m_manager == null) return;
-            submitStr = m_tb.Text;
-            if (string.IsNullOrWhiteSpace(submitStr))
+            if (string.IsNullOrWhiteSpace(str)|| !m_manager.IsValid)
             {
-                _showMessage("提交数据为空！", false);
+                _showMessage(string.IsNullOrWhiteSpace(str) ? "提交数据为空！":"初始化失败，无法提交！", false);
                 return;
             }
-            if (!m_manager.IsValid)
-            {
-                _showMessage("初始化失败，无法提交！", false);
-                return;
-            }
-#else
-            submitStr = m_tb.Text;
 #endif
-            submitStr += submitStr.EndsWith("\n") ? "" : "\n";
-            new Thread(_submit).Start();
+            new Thread(_submit).Start(str);
             _statusBarState("正在提交...", true);
         }
 
-        private void _submit()
+        private void _submit(object o)
         {
+            string str = o as string;
+            if (str == null) return;
+
             StringBuilder errorstr = new StringBuilder();
             TextBoxUpdate update = new TextBoxUpdate(_textBoxUpdate);
             this.Dispatcher.Invoke(update, "\n\n--------------\n");
             int counts = 0, successcount = 0;
-            string[] values = submitStr.Split('\n');
-            foreach(var v in values)
+            var stocks = _getStocks(str);
+            foreach(var v in stocks)
             {
-                if (string.IsNullOrWhiteSpace(v)) continue;
                 ++counts;
-                NnStock stock = new NnStock(v);
-                if (stock.IsAvailable)
+                if (v.IsAvailable)
                 {
-                    int count = m_manager.Submit(stock);
-                    string showStr = _getSubmitFeedback(v, stock, count,errorstr);
+                    int count = m_manager.Submit(v);
+                    string showStr = _getSubmitFeedback(v.OriginalString, v, count,errorstr);
                     if (count > 0) ++successcount;
                     this.Dispatcher.Invoke(update, showStr);
                 }
                 else
                 {
-                    this.Dispatcher.Invoke(update, v.TrimEnd() + "\t---\t数据无效\n");
-                    errorstr.Append(v.TrimEnd()).Append("\t---\t数据无效\n");
+                    this.Dispatcher.Invoke(update, v.OriginalString + "\t---\t数据无效\n");
+                    errorstr.Append(v.OriginalString).Append("\t---\t数据无效\n");
                 }
             }
             this.Dispatcher.Invoke(update, $"--------------\n总计/成功/失败  {counts}/{successcount}/{counts - successcount}（条） nnns\n");
@@ -160,6 +153,19 @@ namespace StockManagementSystem
 
             // 每次更新结束后检查是否需要备份数据库
             _checkBackup();
+        }
+
+        private List<NnStock> _getStocks(string str)
+        {
+            List<NnStock> list = new List<NnStock>();
+            string[] strs = str.Split('\n');
+            foreach (var v in strs)
+            {
+                if (string.IsNullOrWhiteSpace(v)) continue;
+                NnStock stock = new NnStock(v);
+                list.Add(stock);
+            }
+            return list;
         }
 
         private string _getSubmitFeedback(string subStr,NnStock stock,int count, StringBuilder errorstr)

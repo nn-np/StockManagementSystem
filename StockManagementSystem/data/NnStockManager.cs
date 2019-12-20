@@ -264,7 +264,11 @@ namespace data
                 {
                     while (reader.Read())
                     {
-                        NnStock stock = _getNnStcokFromReader(reader, isNew);
+                        NnStock stock = new NnStock();
+                        if (isNew)
+                            stock.InitStockNewByDb(reader);
+                        else
+                            stock.InitStockOldByDb(reader);
                         sb.Append(s.Replace("'", "")).Append(',');
                         if (!isNew)
                             sb.Append(stock.DateRemove.ToShortDateString()).Append(',');
@@ -278,33 +282,6 @@ namespace data
             catch { }
             if (isNew && sb.Length < 2) sb.Append(s.Replace("'", "")).Append(",,无记录！,").Append('\n');// 如果没有记录则添加提示字段
             return sb.ToString();
-        }
-
-        private NnStock _getNnStcokFromReader(OleDbDataReader reader, bool isNew)
-        {
-            NnStock stock = new NnStock();
-            try
-            {
-                stock.OrderId = GetStringFromDb(reader, "orderId");
-                stock.WorkNo = GetIntFromDb(reader, "workNo");
-                stock.Quality = GetDoubleFromDb(reader, "quality");
-                stock.Purity = GetDoubleFromDb(reader, "purity");
-                stock.Mw = GetDoubleFromDb(reader, "mw");
-                if (isNew)
-                {
-                    stock.DateAdd = GetDateTiemFromDb(reader, "_date");
-                    stock.Coordinate = GetStringFromDb(reader, "coordinate");
-                    stock.Comments = GetStringFromDb(reader, "comments");
-                }
-                else
-                {
-                    stock.DateAdd = GetDateTiemFromDb(reader, "dateAdd");
-                    stock.DateRemove = GetDateTiemFromDb(reader, "dateRemove");
-                    stock.Cause = GetStringFromDb(reader, "cause");
-                }
-            }
-            catch { }
-            return stock;
         }
 
         // 删除自己创建的无用文件
@@ -521,7 +498,8 @@ namespace data
                     {
                         if (reader.Read())
                         {
-                            sk = _getNnStcokFromReader(reader, true);
+                            sk = new NnStock();
+                            sk.InitStockNewByDb(reader);
                             sk.Purity = stock.Purity;
                             sk.Mw = stock.Mw;
                             if (stock.Quality > 0)
@@ -565,9 +543,40 @@ namespace data
                 catch (Exception e) { Console.WriteLine(e.ToString()); }
 
                 if (count > 0)
+                {
                     _updateCoordinate(stock.Coordinate, true);
+                    // 移除临时库存
+                    _deleteTemporaryStock(stock);
+                }
             }
             return count;
+        }
+        /// <summary>
+        /// 移除临时库存
+        /// </summary>
+        /// <param name="stock"></param>
+        private void _deleteTemporaryStock(NnStock stock)
+        {
+            List<NnStock> list = new List<NnStock>();
+            using (OleDbCommand cmd = new OleDbCommand("SELECT * FROM stock_new WHERE [orderId]=@v1", m_connection))
+            {
+                cmd.Parameters.AddWithValue("v1", stock.OrderId);
+                using (OleDbDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        NnStock sk = new NnStock();
+                        sk.InitStockNewByDb(reader);
+                        if (sk.Coordinate.StartsWith("L-"))
+                            list.Add(sk);
+                    }
+                }
+            }
+            foreach(var v in list)
+            {
+                v.Cause = "库存替换" + stock.Coordinate;
+                _removeFromDatabase(v);
+            }
         }
 
         // 从数据库移除
@@ -584,7 +593,8 @@ namespace data
                     {
                         if (reader.Read())
                         {
-                            sk = _getNnStcokFromReader(reader, true);
+                            sk = new NnStock();
+                            sk.InitStockNewByDb(reader);
                         }
                     }
                     if (sk == null) return count;
@@ -664,6 +674,8 @@ namespace data
         /// <param name="isRemove">是否移除坐标</param>
         private void _updateCoordinate(string coordinate, bool isRemove)
         {
+            // 过滤临时坐标
+            if (string.IsNullOrEmpty(coordinate) || coordinate.StartsWith("L-")) return;
             try
             {
                 int index = coordinate.IndexOf('-');
