@@ -220,68 +220,134 @@ namespace data
             StringBuilder sb2 = new StringBuilder();
             sb1.Append("KeyWord,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,备注,\n");
             sb2.Append("\n\n已被移除项目：\nKeyWord,RemoveDate,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,备注,Cause,\n");
-            str += str.EndsWith("\n") ? "" : "\n";
-            int i = str.IndexOf('\n'), j = 0;
-            while (i > 0)
+
+            List<string> strs = _getSearchStrings(str);
+            foreach(var v in strs)
             {
-                string s = str.Substring(j, i - j);
-                _getSearchString(s, sb1, sb2);
-                j = i + 1;
-                i = str.IndexOf('\n', j);
+                _getSearchValues(v, sb1, sb2);
             }
             string result = sb1.Append(sb2).ToString();
             _writeToFileAndOpen(result);
             return result.Replace(',', '\t');
         }
 
-        private void _getSearchString(string s, StringBuilder sb1, StringBuilder sb2)
+        private List<string> _getSearchStrings(string str)
         {
-            s = s.Trim();
-            int flg = s.IndexOf('-');// flg小于0则认为是workNo，在(0,6]之间为坐标，大于6为OrderId
-            if (flg < 0)// 如果是workNo
+            List<string> list = new List<string>();
+            if (string.IsNullOrEmpty(str)) return list;
+            string[] ss = str.Split('\n');
+            foreach(var v in ss)
             {
-                sb1.Append(_getStringFromCoordinate(s, "stock_new", "workNo"));
-                sb2.Append(_getStringFromCoordinate(s, "stock_old", "workNo"));
-            }else if (flg < 7)// 如果是坐标
-            {
-                sb1.Append(_getStringFromCoordinate("'" + s + "'", "stock_new", "coordinate"));
+                if (!string.IsNullOrWhiteSpace(v))
+                    list.Add(v.Trim());
             }
-            else// 如果是orderId
+            return list;
+        }
+
+        private void _getSearchValues(string s, StringBuilder sb1, StringBuilder sb2)
+        {
+            List<NnStock> l1 = new List<NnStock>(), l2 = new List<NnStock>();
+            if (!s.Contains('-'))// 如果是workNo
             {
-                sb1.Append(_getStringFromCoordinate("'" + s + "'", "stock_new", "orderId"));
-                sb2.Append(_getStringFromCoordinate("'" + s + "'", "stock_old", "orderId"));
+                _searchByWorkNo(s, l1, l2);
+            }
+            else// 否则
+            {
+                _searchByOrderIdAndCoordinate(s, l1, l2);
+            }
+            if (l1.Count < 1)
+            {
+                sb1.Append(s.Replace(",","")).Append(",,无记录！,\n");
+            }
+            foreach(var v in l1)
+            {
+                sb1.Append(s.Replace(",", "")).Append(",").Append(v.ToString()).Append(",\n");
+            }
+            foreach(var v in l2)
+            {
+                sb2.Append(s.Replace(",", "")).Append(",").Append(v.DateRemove.ToShortDateString()).Append(',').Append(v.ToString()).Append(v.Cause).Append('\n');
             }
         }
 
-        private string _getStringFromCoordinate(string s,string stockname, string key)
+        /// <summary>
+        /// 通过OrderId和Coordinate搜索
+        /// </summary>
+        private void _searchByOrderIdAndCoordinate(string s, List<NnStock> l1, List<NnStock> l2)
         {
-            StringBuilder sb = new StringBuilder();
-            bool isNew = stockname == "stock_new";// 标明这个是在新表里查还是旧表里查
-            string sql = $"select * from {stockname} where {key}={s}";
             try
             {
-                using (OleDbDataReader reader = _executeReader(sql))
+                using (OleDbCommand cmd = new OleDbCommand("SELECT * FROM stock_new WHERE [coordinate]=@v1", m_connection))
                 {
-                    while (reader.Read())
+                    cmd.Parameters.AddWithValue("v1", s);
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
                     {
-                        NnStock stock = new NnStock();
-                        if (isNew)
-                            stock.InitStockNewByDb(reader);
-                        else
-                            stock.InitStockOldByDb(reader);
-                        sb.Append(s.Replace("'", "")).Append(',');
-                        if (!isNew)
-                            sb.Append(stock.DateRemove.ToShortDateString()).Append(',');
-                        sb.Append(stock.ToString());
-                        if (!isNew)
-                            sb.Append(stock.Cause).Append(',');
-                        sb.Append("\n");
+                        if (reader.Read())
+                        {
+                            NnStock ns = new NnStock();
+                            ns.InitStockNewByDb(reader);
+                            l1.Add(ns);
+                            return;
+                        }
+                    }
+                    cmd.CommandText = "SELECT * FROM stock_new WHERE [orderId]=@v1";
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            NnStock ns = new NnStock();
+                            ns.InitStockNewByDb(reader);
+                            l1.Add(ns);
+                        }
+                    }
+                    cmd.CommandText = "SELECT * FROM stock_old WHERE [orderId]=@v1";
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            NnStock ns = new NnStock();
+                            ns.InitStockOldByDb(reader);
+                            l2.Add(ns);
+                        }
                     }
                 }
             }
-            catch { }
-            if (isNew && sb.Length < 2) sb.Append(s.Replace("'", "")).Append(",,无记录！,").Append('\n');// 如果没有记录则添加提示字段
-            return sb.ToString();
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+        }
+
+        /// <summary>
+        /// 通过workno搜索
+        /// </summary>
+        private void _searchByWorkNo(string s, List<NnStock> l1, List<NnStock> l2)
+        {
+            try
+            {
+                using (OleDbCommand cmd = new OleDbCommand("SELECT * FROM stock_new WHERE [workNo]=@v1", m_connection))
+                {
+                    cmd.Parameters.AddWithValue("v1", s);
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            NnStock ns = new NnStock();
+                            ns.InitStockNewByDb(reader);
+                            l1.Add(ns);
+                        }
+                    }
+                    //cmd.Parameters.Clear();
+                    cmd.CommandText = "SELECT * FROM stock_old WHERE [workNo]=@v1";
+                    //cmd.Parameters.AddWithValue("v1", s);
+                    using (OleDbDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            NnStock ns = new NnStock();
+                            ns.InitStockOldByDb(reader);
+                            l2.Add(ns);
+                        }
+                    }
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
 
         // 删除自己创建的无用文件
@@ -567,14 +633,14 @@ namespace data
                     {
                         NnStock sk = new NnStock();
                         sk.InitStockNewByDb(reader);
-                        if (sk.Coordinate.StartsWith("L-"))
+                        if (sk.Coordinate.StartsWith("L-") && sk.Coordinate != stock.Coordinate)
                             list.Add(sk);
                     }
                 }
             }
-            foreach(var v in list)
+            foreach (var v in list)
             {
-                v.Cause = "库存替换" + stock.Coordinate;
+                v.Cause = "坐标替换" + v.Coordinate + "->" + stock.Coordinate;
                 _removeFromDatabase(v);
             }
         }
@@ -674,8 +740,6 @@ namespace data
         /// <param name="isRemove">是否移除坐标</param>
         private void _updateCoordinate(string coordinate, bool isRemove)
         {
-            // 过滤临时坐标
-            if (string.IsNullOrEmpty(coordinate) || coordinate.StartsWith("L-")) return;
             try
             {
                 int index = coordinate.IndexOf('-');

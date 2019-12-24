@@ -29,8 +29,6 @@ namespace StockManagementSystem
     {
         private NnStockManager m_manager;
 
-        private string submitStr;// 用于提交或者搜索的字符串
-
         public bool IsPassed { get; internal set; }
 
         public MainWindow(bool isPassed = false)
@@ -77,25 +75,30 @@ namespace StockManagementSystem
             _statusBarState("就绪", false);
         }
 
-        // 搜索按钮
+        /// <summary>
+        /// 搜索库存
+        /// </summary>
         private void click_search(object sender, RoutedEventArgs e)
         {
-            submitStr = m_tb.Text;
-            if (m_manager == null || string.IsNullOrWhiteSpace(submitStr))
+            if (m_manager == null || string.IsNullOrWhiteSpace(m_tb.Text))
                 return;
             if (!m_manager.IsValid)
             {
                 _showMessage("初始化失败，无法搜索！", false);
                 return;
             }
-            new Thread(_search).Start();
+            new Thread(_search).Start(m_tb.Text.Trim());
             _statusBarState("正在搜索...", true);
         }
 
-        private void _search()
+        /// <summary>
+        /// 搜索库存
+        /// </summary>
+        private void _search(object o)
         {
-            string str = m_manager.Search(submitStr);
-            submitStr = "";
+            string value = o as string;
+            if (value == null) return;
+            string str = m_manager.Search(value);
             this.Dispatcher.Invoke(new TextBoxUpdate(_textBoxUpdate), "\n\n------------\n"+str);
             _statusBarState("就绪", false);
         }
@@ -143,7 +146,7 @@ namespace StockManagementSystem
                 }
             }
             this.Dispatcher.Invoke(update, $"--------------\n总计/成功/失败  {counts}/{successcount}/{counts - successcount}（条） nnns\n");
-            submitStr = "";
+
             _statusBarState("就绪", false);
 
             if (!string.IsNullOrWhiteSpace(errorstr.ToString()))
