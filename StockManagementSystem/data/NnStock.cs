@@ -91,6 +91,25 @@ namespace data
                 return StockState.Delete;
             }
         }
+        private SearchState searchstate;
+        /// <summary>
+        /// 搜索状态
+        /// </summary>
+        public SearchState StockSearchState
+        {
+            get
+            {
+                if (searchstate != SearchState.Uninitialized) return searchstate;
+                if (string.IsNullOrWhiteSpace(Cause))
+                {
+                    if (Coordinate.StartsWith("L-"))
+                        return SearchState.Temporary;
+                    return SearchState.Normal;
+                }
+                return SearchState.Deleted;
+            }
+            set => searchstate = value;
+        }
 
         public double Purity { get => purity; set => purity = value; }
         public string PurityString
@@ -178,7 +197,14 @@ namespace data
             }
             return value;
         }
-
+        public enum SearchState
+        {
+            Uninitialized,// 未初始化
+            Normal,
+            Temporary,
+            Deleted,
+            None,// 没有
+        }
         public enum StockState
         {
             Insert,

@@ -125,7 +125,7 @@ namespace data
                 {
                     return i;
                 }
-                return (int)(GetMaxValue(x.Coordinate)- GetMaxValue(y.Coordinate));
+                return (int)(GetMaxValue(x.Coordinate) - GetMaxValue(y.Coordinate));
             });
             sb.Append("坐标").Append('\n');
             foreach (var v in list)
@@ -162,7 +162,7 @@ namespace data
                                 string coos = reader["coo"] as string;
                                 if (string.IsNullOrWhiteSpace(coos)) continue;
                                 string[] cos = coos.Split(',');
-                                foreach(var v in cos)
+                                foreach (var v in cos)
                                 {
                                     if (string.IsNullOrWhiteSpace(v)) continue;
                                     Coordinates co = new Coordinates();
@@ -187,7 +187,7 @@ namespace data
                 return (int)(GetMaxValue(x.Coordinate) - GetMaxValue(y.Coordinate));
             });
             StringBuilder sb = new StringBuilder();
-            foreach(var v in list)
+            foreach (var v in list)
             {
                 sb.Append(v.Plate).Append('-').Append(v.Coordinate).Append('\n');
             }
@@ -216,17 +216,13 @@ namespace data
         // 用于搜索
         internal string Search(string str)
         {
-            StringBuilder sb1 = new StringBuilder();
-            StringBuilder sb2 = new StringBuilder();
-            sb1.Append("KeyWord,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,备注,\n");
-            sb2.Append("\n\n已被移除项目：\nKeyWord,RemoveDate,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,备注,Cause,\n");
-
             List<string> strs = _getSearchStrings(str);
-            foreach(var v in strs)
+            StockSearcher stSearcher = new StockSearcher();
+            foreach (var v in strs)
             {
-                _getSearchValues(v, sb1, sb2);
+                _getSearchValues(v, stSearcher);
             }
-            string result = sb1.Append(sb2).ToString();
+            string result = stSearcher.ToString();
             _writeToFileAndOpen(result);
             return result.Replace(',', '\t');
         }
@@ -236,7 +232,7 @@ namespace data
             List<string> list = new List<string>();
             if (string.IsNullOrEmpty(str)) return list;
             string[] ss = str.Split('\n');
-            foreach(var v in ss)
+            foreach (var v in ss)
             {
                 if (!string.IsNullOrWhiteSpace(v))
                     list.Add(v.Trim());
@@ -244,36 +240,30 @@ namespace data
             return list;
         }
 
-        private void _getSearchValues(string s, StringBuilder sb1, StringBuilder sb2)
+        private void _getSearchValues(string s, StockSearcher ss)
         {
-            List<NnStock> l1 = new List<NnStock>(), l2 = new List<NnStock>();
+            bool isHas;
             if (!s.Contains('-'))// 如果是workNo
             {
-                _searchByWorkNo(s, l1, l2);
+                isHas = _searchByWorkNo(s, ss);
             }
             else// 否则
             {
-                _searchByOrderIdAndCoordinate(s, l1, l2);
+                isHas = _searchByOrderIdAndCoordinate(s, ss);
             }
-            if (l1.Count < 1)
+            if (!isHas)
             {
-                sb1.Append(s.Replace(",","")).Append(",,无记录！,\n");
-            }
-            foreach(var v in l1)
-            {
-                sb1.Append(s.Replace(",", "")).Append(",").Append(v.ToString()).Append(",\n");
-            }
-            foreach(var v in l2)
-            {
-                sb2.Append(s.Replace(",", "")).Append(",").Append(v.DateRemove.ToShortDateString()).Append(',').Append(v.ToString()).Append(v.Cause).Append('\n');
+                NnStock ns = new NnStock() { StockSearchState = NnStock.SearchState.None, OriginalString = s };
+                ss.Add(ns);
             }
         }
 
         /// <summary>
         /// 通过OrderId和Coordinate搜索
         /// </summary>
-        private void _searchByOrderIdAndCoordinate(string s, List<NnStock> l1, List<NnStock> l2)
+        private bool _searchByOrderIdAndCoordinate(string s, StockSearcher ss)
         {
+            bool isHas = false;
             try
             {
                 using (OleDbCommand cmd = new OleDbCommand("SELECT * FROM stock_new WHERE [coordinate]=@v1", m_connection))
@@ -285,8 +275,9 @@ namespace data
                         {
                             NnStock ns = new NnStock();
                             ns.InitStockNewByDb(reader);
-                            l1.Add(ns);
-                            return;
+                            ns.OriginalString = s;
+                            ss.Add(ns);
+                            return true;
                         }
                     }
                     cmd.CommandText = "SELECT * FROM stock_new WHERE [orderId]=@v1";
@@ -296,7 +287,9 @@ namespace data
                         {
                             NnStock ns = new NnStock();
                             ns.InitStockNewByDb(reader);
-                            l1.Add(ns);
+                            ns.OriginalString = s;
+                            isHas = true;
+                            ss.Add(ns);
                         }
                     }
                     cmd.CommandText = "SELECT * FROM stock_old WHERE [orderId]=@v1";
@@ -306,19 +299,22 @@ namespace data
                         {
                             NnStock ns = new NnStock();
                             ns.InitStockOldByDb(reader);
-                            l2.Add(ns);
+                            ns.OriginalString = s;
+                            ss.Add(ns);
                         }
                     }
                 }
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
+            return isHas;
         }
 
         /// <summary>
         /// 通过workno搜索
         /// </summary>
-        private void _searchByWorkNo(string s, List<NnStock> l1, List<NnStock> l2)
+        private bool _searchByWorkNo(string s, StockSearcher ss)
         {
+            bool isHas = false;
             try
             {
                 using (OleDbCommand cmd = new OleDbCommand("SELECT * FROM stock_new WHERE [workNo]=@v1", m_connection))
@@ -330,24 +326,26 @@ namespace data
                         {
                             NnStock ns = new NnStock();
                             ns.InitStockNewByDb(reader);
-                            l1.Add(ns);
+                            ns.OriginalString = s;
+                            ss.Add(ns);
+                            isHas = true;
                         }
                     }
-                    //cmd.Parameters.Clear();
                     cmd.CommandText = "SELECT * FROM stock_old WHERE [workNo]=@v1";
-                    //cmd.Parameters.AddWithValue("v1", s);
                     using (OleDbDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
                             NnStock ns = new NnStock();
                             ns.InitStockOldByDb(reader);
-                            l2.Add(ns);
+                            ns.OriginalString = s;
+                            ss.Add(ns);
                         }
                     }
                 }
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
+            return isHas;
         }
 
         // 删除自己创建的无用文件
@@ -586,7 +584,7 @@ namespace data
             return count;
         }
 
-        // 加入数据库
+        // TODO自增ID 加入数据库
         private int _addIntoDatabase(NnStock stock)
         {
             int count = 0;
@@ -696,7 +694,7 @@ namespace data
             {
                 int index = coordinate.IndexOf('-');
                 if (index < 0) return;
-                string box= coordinate.Substring(0, index);
+                string box = coordinate.Substring(0, index);
                 string place = coordinate.Substring(index + 1, coordinate.Length - index - 1);
                 using (OleDbCommand cmd = new OleDbCommand("select * from notqccoordinate where box = @bx", m_connection))
                 {
@@ -709,7 +707,7 @@ namespace data
                             if (isRemove)
                                 newplace = (reader["coo"] as string).Replace(place + ",", "");
                             else
-                                newplace = ((reader["coo"]as string)??"") + place + ",";
+                                newplace = ((reader["coo"] as string) ?? "") + place + ",";
                         }
                     }
                     if (newplace != null)
@@ -776,7 +774,7 @@ namespace data
                         cmd.Parameters.Clear();
                         cmd.CommandText = "insert into coordinate (plate,coo) values(@pt,@ppt)";
                         cmd.Parameters.AddWithValue("np", plate);
-                        cmd.Parameters.AddWithValue("pt", place+",");
+                        cmd.Parameters.AddWithValue("pt", place + ",");
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -787,7 +785,7 @@ namespace data
         // 从数据库读取数据
         private OleDbDataReader _executeReader(string sql)
         {
-            using(OleDbCommand cmd = m_connection.CreateCommand())
+            using (OleDbCommand cmd = m_connection.CreateCommand())
             {
                 cmd.CommandText = sql;
                 return cmd.ExecuteReader();
@@ -938,6 +936,68 @@ namespace data
                 }
             }
             return value;
+        }
+    }
+    class StockSearcher
+    {
+        private List<NnStock> mNormalList;// 正常
+        private List<NnStock> mLList;// 临时坐标
+        private List<NnStock> mRemoveList;// 已移除
+
+        public StockSearcher()
+        {
+            mNormalList = new List<NnStock>();
+            mLList = new List<NnStock>();
+            mRemoveList = new List<NnStock>();
+        }
+
+        public void Add(NnStock stock)
+        {
+            switch (stock.StockSearchState)
+            {
+                case NnStock.SearchState.None:// 没有结果
+                    mNormalList.Add(stock);
+                    break;
+                case NnStock.SearchState.Normal:// 正常
+                    mNormalList.Add(stock);
+                    break;
+                case NnStock.SearchState.Temporary:// 临时坐标
+                    mLList.Add(stock);
+                    break;
+                case NnStock.SearchState.Deleted:// 已移除
+                    mRemoveList.Add(stock);
+                    break;
+                default:
+                    mNormalList.Add(stock);
+                    break;
+            }
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("KeyWord,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,备注,\n");
+            foreach(var v in mNormalList)
+            {
+                if (v.StockSearchState == NnStock.SearchState.None)
+                {
+                    sb.Append(v.OriginalString.Replace(",", "")).Append(",,无记录！,\n");
+                }
+                else
+                {
+                    sb.Append(v.OriginalString.Replace(",", "")).Append(",").Append(v.ToString()).Append(",\n");
+                }
+            }
+            foreach(var v in mLList)
+            {
+                sb.Append(v.OriginalString.Replace(",", "")).Append(",").Append(v.ToString()).Append(",\n");
+            }
+            sb.Append("\n\n已被移除项目：\nKeyWord,RemoveDate,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,备注,Cause,\n");
+            foreach(var v in mRemoveList)
+            {
+                sb.Append(v.OriginalString.Replace(",", "")).Append(",").Append(v.DateRemove.ToShortDateString()).Append(',').Append(v.ToString()).Append(v.Cause).Append('\n');
+            }
+            return sb.ToString();
         }
     }
 }

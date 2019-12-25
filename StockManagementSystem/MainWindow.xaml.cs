@@ -22,7 +22,7 @@ using System.Windows.Shapes;
 namespace StockManagementSystem
 {
     /// <summary>
-    /// MainWindow.xaml 的交互逻辑
+    /// 库存管理
     /// </summary>
     // <!--#FFCA5100 #FF007ACC-->
     public partial class MainWindow : Window
