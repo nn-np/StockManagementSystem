@@ -23,6 +23,39 @@ namespace ShippingTools
         public MainWindow()
         {
             InitializeComponent();
+
+            init();
+        }
+
+        private void init()
+        {
+
+            _initPosition();
+        }
+
+        private void _initPosition()
+        {
+            try
+            {
+                Rect bounds = Properties.Settings.Default.MainWindowPosition;
+                if (bounds.Width <= 0) return;
+                Top = bounds.Top;
+                Left = bounds.Left;
+                if (SizeToContent == SizeToContent.Manual)
+                {
+                    Width = bounds.Width;
+                    Height = bounds.Height;
+                }
+                WindowState = Properties.Settings.Default.MainWindowState;
+            }
+            catch { }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Properties.Settings.Default.MainWindowPosition = RestoreBounds;
+            Properties.Settings.Default.MainWindowState = WindowState;
+            Properties.Settings.Default.Save();
         }
     }
 }

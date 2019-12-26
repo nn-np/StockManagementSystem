@@ -20,7 +20,7 @@ namespace data
         private StreamWriter m_writer;// 用于写入数据到文件
         string m_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\nnns\";
 
-        //private int initcount = 0;
+        private Random mRandom = new Random();
 
         //弹出通知窗口（通知窗口有两种，一种自动消失（表示提示,isWarning为false），一种需要手动关闭（表示信息重要，必须引起客户重视，isWarning为true））
         public delegate void NnShowMessage(string message, bool isWarning);
@@ -587,6 +587,7 @@ namespace data
         // TODO自增ID 加入数据库
         private int _addIntoDatabase(NnStock stock)
         {
+            _initStockCoordinate(stock);// 检测是否是临时坐标，并确保临时坐标不会重复
             int count = 0;
             using (OleDbCommand cmd = new OleDbCommand("", m_connection))
             {
@@ -615,6 +616,32 @@ namespace data
             }
             return count;
         }
+        /// <summary>
+        /// 检测是否是临时坐标，并确保临时坐标不会重复
+        /// </summary>
+        private void _initStockCoordinate(NnStock stock)
+        {
+            if (!stock.Coordinate.StartsWith("L-")) return;
+            int count = SelectStockCountByDate(DateTime.Now);
+            stock.Coordinate += $"-{count + 1}{mRandom.Next(0, 100)}";
+        }
+
+        private int SelectStockCountByDate(DateTime now)
+        {
+            var time = now.AddHours((now.Hour + 1) * -1);
+            int count = 0;
+            try
+            {
+                using (OleDbCommand cmd = new OleDbCommand("select COUNT(*) from stock_new where [_date]>@dt", m_connection))
+                {
+                    cmd.Parameters.AddWithValue("dt", time.ToString());
+                    count = Convert.ToInt32(cmd.ExecuteScalar());
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            return count;
+        }
+
         /// <summary>
         /// 移除临时库存
         /// </summary>

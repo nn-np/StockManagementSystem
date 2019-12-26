@@ -132,7 +132,7 @@ namespace data
             }
         }
         // 坐标
-        public string Coordinate { get => coordinate; set => coordinate = (value ?? "").ToUpper(); }
+        public string Coordinate { get => coordinate ?? ""; set => coordinate = (value ?? "").ToUpper(); }
 
         // 添加日期
         public DateTime DateAdd { get; set; }
