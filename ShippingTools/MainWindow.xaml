@@ -5,8 +5,122 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ShippingTools"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Closing="Window_Closing">
+        Title="发货记录" Height="450" Width="800" Closing="Window_Closing">
+    <Window.Resources>
+        <!--左侧列表样式-->
+        <DataTemplate x:Key="ListBoxItem">
+            <Grid Margin="3">
+                <TextBlock Text="{Binding Path=Title}" FontSize="16" FontWeight="Bold"/>
+            </Grid>
+        </DataTemplate>
+        <!--左侧列表Style-->
+        <Style x:Key="FocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle Margin="2" SnapsToDevicePixels="true" Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" StrokeThickness="1" StrokeDashArray="1 2"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <SolidColorBrush x:Key="Item.MouseOver.Background" Color="#1F26A0DA"/>
+        <SolidColorBrush x:Key="Item.SelectedInactive.Background" Color="#FFBEDBEC"/>
+        <SolidColorBrush x:Key="Item.SelectedActive.Background" Color="#FFBEDBEC"/>
+        <SolidColorBrush x:Key="LeftListBoxItemBackground" Color="#FFECECEC"/>
+        <Style x:Key="LeftListBoxItemStyle" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Padding" Value="4,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+            <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
+            <Setter Property="Foreground" Value="#FF234567"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Border Margin="3" x:Name="Bd" CornerRadius="5" Background="{StaticResource LeftListBoxItemBackground}" MinWidth="80" SnapsToDevicePixels="true">
+                            <Border.Effect>
+                                <DropShadowEffect ShadowDepth="0" BlurRadius="5" RenderingBias="Quality"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.MouseOver.Background}"/>
+                                <Setter Property="Effect" TargetName="Bd" Value="{x:Null}"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="Selector.IsSelectionActive" Value="False"/>
+                                    <Condition Property="IsSelected" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.SelectedInactive.Background}"/>
+                                <Setter Property="Foreground" Value="#FFCA5100"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="Selector.IsSelectionActive" Value="True"/>
+                                    <Condition Property="IsSelected" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.SelectedActive.Background}"/>
+                                <Setter Property="Foreground" Value="#FFCA5100"/>
+                            </MultiTrigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="TextElement.Foreground" TargetName="Bd" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <ListBox x:Name="mLBMain" Grid.RowSpan="3" BorderBrush="{x:Null}" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled" MinWidth="50" ItemTemplate="{StaticResource ListBoxItem}" ItemContainerStyle="{StaticResource LeftListBoxItemStyle}" SelectionChanged="mLBMain_SelectionChanged"/>
+
+        <Frame x:Name="mFrame" Grid.Column="1" Grid.Row="1" NavigationUIVisibility="Hidden"/>
+
+        <StatusBar x:Name="mStatusBar" Grid.ColumnSpan="2" Grid.Row="2" Background="#FF007ACC">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            <TextBlock x:Name="sbLeft" Text="就绪" Foreground="White"/>
+            <StatusBarItem Grid.Column="3" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Padding="3,4" HorizontalAlignment="Right" MinWidth="120">
+                <ProgressBar x:Name="sbProgress" Background="Transparent" Foreground="White" Visibility="Collapsed"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="4" >
+                <TextBlock x:Name="sbCenter" Foreground="White"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="6" >
+                <TextBlock x:Name="sbRight" Foreground="White"/>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>

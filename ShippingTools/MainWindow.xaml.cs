@@ -57,5 +57,10 @@ namespace ShippingTools
             Properties.Settings.Default.MainWindowState = WindowState;
             Properties.Settings.Default.Save();
         }
+
+        private void mLBMain_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
     }
 }
