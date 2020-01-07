@@ -20,6 +20,8 @@ namespace ShippingTools
     /// </summary>
     public partial class MainWindow : Window
     {
+        private Page mPage;
+        private Template mTemplate;
         public MainWindow()
         {
             InitializeComponent();
@@ -29,7 +31,11 @@ namespace ShippingTools
 
         private void init()
         {
+            List<Template> list = new List<Template>();
+            list.Add(new ShippingTools.Template() { Title = "所有数据" });
 
+            mLBMain.ItemsSource = list;
+            mLBMain.SelectedIndex = 0;
             _initPosition();
         }
 
@@ -60,7 +66,21 @@ namespace ShippingTools
 
         private void mLBMain_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            if (e.AddedItems.Count <= 0 || e.AddedItems[0] == null) return;
+            mTemplate = e.AddedItems[0] as Template;
+            if (mTemplate == null) return;
+            switch (mTemplate.Title)
+            {
+                case "所有数据":
+                    mPage = new PageValue();
+                    break;
+                default: return;
+            }
+            mFrame.Content = mPage;
+            if (mFrame.CanGoBack)
+            {
+                mFrame.RemoveBackEntry();
+            }
         }
     }
 }

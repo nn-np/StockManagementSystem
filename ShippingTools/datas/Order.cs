@@ -11,6 +11,10 @@ namespace ShippingTools
     /// </summary>
     class Order
     {
+        /// <summary>
+        /// ID
+        /// </summary>
+        public int Id { get; set; }
         private string serialNumber;
         /// <summary>
         /// 序号
