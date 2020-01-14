@@ -75,6 +75,8 @@ namespace ShippingTools
         /// 贴标日期
         /// </summary>
         public string DateLabel { get => dateLabel.ToShortDateString(); set { DateTime.TryParse(value, out DateTime dt); dateLabel = dt; } }
+
+
         private string release;
         /// <summary>
         /// 放行
@@ -90,5 +92,19 @@ namespace ShippingTools
         /// 备注
         /// </summary>
         public string Comments { get => comments ?? ""; set => comments = value; }
+        /// <summary>
+        /// 上传原始数据
+        /// </summary>
+        public string OriginalValue { get; internal set; }
+
+        /// <summary>
+        /// 是否有效
+        /// </summary>
+        public bool IsValid { get; set; }
+
+        internal void InitByString(string v)
+        {
+
+        }
     }
 }

@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace ShippingTools
+namespace ShippingTools.pages
 {
     /// <summary>
     /// 数据页面
@@ -28,7 +28,7 @@ namespace ShippingTools
 
         private void init()
         {
-            List<Order> list = NnReader
+            //List<Order> list = NnReader
         }
     }
 }

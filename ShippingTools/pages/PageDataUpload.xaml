@@ -1,0 +1,66 @@
+﻿<Page x:Class="ShippingTools.pages.PageDataUpload"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:ShippingTools.pages"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="PageDataUpload">
+    
+    <Grid Background="#FFF0F0F0" Margin="7">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.ColumnSpan="2" x:Name="mTBTitle">
+            <Run FontSize="24">数据上传</Run>
+            <LineBreak/>
+            <Run FontWeight="Thin" Text="提交格式：[序号]+[工单号]+[Order ID]+[质量]+[分子量 ]+[外观]+[Lot.No]+[分装要求]+[贴标日期]+[放行时间]+[纯度]+[数据整理]+[贴标]+[日期]+[放行]+[日期]+[备注]"/>
+        </TextBlock>
+
+        <TextBox Margin="5" x:Name="mTBMain" Grid.Row="1" AcceptsTab="True" AcceptsReturn="True" TextWrapping="WrapWithOverflow" MouseDoubleClick="MTBMain_MouseDoubleClick"/>
+
+        <Grid Grid.Column="1" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="5*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="2*"/>
+            </Grid.RowDefinitions>
+            <Button Grid.Row="1" Margin="5" Click="Button_Click" HorizontalContentAlignment="Left" Padding="1" Tag="submit">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="5*"/>
+                    </Grid.ColumnDefinitions>
+                    <ContentControl Template="{StaticResource bt_submit}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,3,0,3"/>
+                    <TextBlock Grid.Column="1" Margin="5,0,0,0">
+                            <Run FontSize="16" Language="zh-cn">上 传</Run>
+                            <LineBreak/>
+                            <Run Language="zh-cn" Foreground="#FF373737">上传标签数据</Run>
+                    </TextBlock>
+                </Grid>
+            </Button>
+            <Button Grid.Row="2" Margin="5" Click="Button_Click" HorizontalContentAlignment="Left" Padding="1" Tag="cancel">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="5*"/>
+                    </Grid.ColumnDefinitions>
+                    <ContentControl Template="{StaticResource bt_submit}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,3,0,3"/>
+                    <TextBlock Grid.Column="1" Margin="5,0,0,0">
+                            <Run FontSize="16" Language="zh-cn">取 消</Run>
+                            <LineBreak/>
+                            <Run Language="zh-cn" Foreground="#FF373737">取消上传</Run>
+                    </TextBlock>
+                </Grid>
+            </Button>
+        </Grid>
+    </Grid>
+</Page>
