@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ShippingTools"
         mc:Ignorable="d"
-        Title="发货记录" Height="574" Width="1020" Closing="Window_Closing">
+        Title="发货记录" Height="480" Width="850" Closing="Window_Closing">
     <Window.Resources>
         <!--左侧列表样式-->
         <DataTemplate x:Key="ListBoxItem">

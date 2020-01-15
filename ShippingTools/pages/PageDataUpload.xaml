@@ -21,7 +21,7 @@
         <TextBlock Grid.ColumnSpan="2" x:Name="mTBTitle">
             <Run FontSize="24">数据上传</Run>
             <LineBreak/>
-            <Run FontWeight="Thin" Text="提交格式：[序号]+[工单号]+[Order ID]+[质量]+[分子量 ]+[外观]+[Lot.No]+[分装要求]+[贴标日期]+[放行时间]+[纯度]+[数据整理]+[贴标]+[日期]+[放行]+[日期]+[备注]"/>
+            <Run FontWeight="Thin" Text="提交格式：[序号]+[工单号]+[Order ID]+[质量]+[分子量 ]+[外观]+[Lot.No]+[放行时间]+[纯度]+[数据整理]+[贴标]+[放行]+[备注]"/>
         </TextBlock>
 
         <TextBox Margin="5" x:Name="mTBMain" Grid.Row="1" AcceptsTab="True" AcceptsReturn="True" TextWrapping="WrapWithOverflow" MouseDoubleClick="MTBMain_MouseDoubleClick"/>

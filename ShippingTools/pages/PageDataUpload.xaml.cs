@@ -94,7 +94,15 @@ namespace ShippingTools.pages
             StringBuilder sb = new StringBuilder();
             foreach (var v in ll)
             {
-                sb.Append(v.OriginalValue).Append("  上传失败！\n");
+                if (!v.IsValid || string.IsNullOrEmpty(v.OrderId))
+                {
+                    sb.Append(v.OriginalValue).Append("  数据无效，检查数据是否完整！\n");
+                    continue;
+                }
+                else
+                {
+                    sb.Append(v.OriginalValue).Append("  上传失败！\n");
+                }
             }
             return sb.ToString();
         }
