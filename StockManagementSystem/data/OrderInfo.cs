@@ -5,9 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace data
+namespace StockManagementSystem.data
 {
-    class NotQCOrder
+    /// <summary>
+    /// 半纯品和树脂肽库存信息
+    /// </summary>
+    class OrderInfo
     {
         private string workno;
         /// <summary>
@@ -40,6 +43,7 @@ namespace data
         /// 原因
         /// </summary>
         public string Cause { get => cause ?? ""; set => cause = value; }
+
         /// <summary>
         /// 添加日期
         /// </summary>
@@ -53,17 +57,44 @@ namespace data
         /// 数据是否有效
         /// </summary>
         public bool IsAvailable { get => !string.IsNullOrWhiteSpace(Coordinate) && Coordinate.Contains('-'); }
-        public NotQCState State
+
+
+        public OrderInfoState State
         {
             get
             {
                 if (string.IsNullOrWhiteSpace(Cause))
-                    return NotQCState.Insert;
-                return NotQCState.Remove;
+                    return OrderInfoState.Insert;
+                return OrderInfoState.Remove;
             }
         }
 
-        public NotQCOrder(string v)
+        /// <summary>
+        /// 原始数据
+        /// </summary>
+        public string OriginalString { get; set; }
+
+        /// <summary>
+        /// 搜索类别
+        /// </summary>
+        public SearchState SearchState { get; set; }
+
+
+        internal object[] GetObejcts()
+        {
+            if (SearchState== SearchState.None)
+            {
+                return new object[] { OriginalString, null, "无记录！" };
+            }
+            return new object[] { OriginalString, DateAdd.ToShortDateString(), WorkNo, OrderId, Quality, Coordinate, Comments };
+        }
+
+        internal object[] GetObjectsRemove()
+        {
+            return new object[] { OriginalString, DateAdd.ToShortDateString(), WorkNo, OrderId, Quality, Coordinate, Comments, DateRemove.ToShortDateString(), Cause };
+        }
+
+        public OrderInfo(string v)
         {
             if (string.IsNullOrWhiteSpace(v)) return;
             string[] strs = v.Split('\t');
@@ -77,7 +108,7 @@ namespace data
                 Comments = strs[7].TrimEnd();
         }
 
-        public NotQCOrder() { }
+        public OrderInfo() { }
 
         public void InitNotQCOrderByDB(OleDbDataReader reader)
         {
@@ -94,14 +125,14 @@ namespace data
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            bool isremove = State == NotQCState.Remove;
+            bool isremove = State == OrderInfoState.Remove;
             sb.Append(DateAdd.ToShortDateString()).Append(',').Append(WorkNo).Append(',')
                 .Append(OrderId).Append(',').Append(Quality).Append(',').Append(Coordinate).Append(',').Append(Comments).Append(',')
                 .Append(isremove ? (DateRemove.ToShortDateString() + ',') : "").Append(isremove ? Cause : "").Append('\n');
             return sb.ToString();
         }
 
-        public enum NotQCState
+        public enum OrderInfoState
         {
             Insert,
             Remove,

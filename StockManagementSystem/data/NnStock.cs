@@ -6,7 +6,7 @@ using System.Linq;
  * crude为 -2，desalt为 -1
  * nnns
  */
-namespace data
+namespace StockManagementSystem.data
 {
     public class NnStock
     {
@@ -154,6 +154,16 @@ namespace data
             return $"{DateAdd.ToShortDateString()},{WorkNo},{OrderId},{QualityString},{Coordinate},{PurityString},{MwString},{Comments},";
         }
 
+        public object[] GetValue()
+        {
+            return new object[] { OriginalString, DateAdd.ToShortDateString(), WorkNo, OrderId, QualityString, Coordinate, PurityString, MwString, Comments };
+        }
+
+        internal object[] GetValueRemove()
+        {
+            return new object[] { OriginalString, DateRemove.ToShortDateString(), DateAdd.ToShortDateString(), WorkNo, OrderId, QualityString, Coordinate, PurityString, MwString, Comments, Cause };
+        }
+
         // -------方法-------
         // 获取字符串中所有数字的和
         private double getSumValue(string str)
@@ -197,14 +207,7 @@ namespace data
             }
             return value;
         }
-        public enum SearchState
-        {
-            Uninitialized,// 未初始化
-            Normal,
-            Temporary,
-            Deleted,
-            None,// 没有
-        }
+
         public enum StockState
         {
             Insert,
@@ -240,5 +243,16 @@ namespace data
             Purity = NnStockManager.GetDoubleFromDb(reader, "purity");
             Mw = NnStockManager.GetDoubleFromDb(reader, "mw");
         }
+    }
+    /// <summary>
+    /// 搜索类型
+    /// </summary>
+    public enum SearchState
+    {
+        Uninitialized,// 未初始化
+        Normal,
+        Temporary,
+        Deleted,
+        None,// 没有
     }
 }

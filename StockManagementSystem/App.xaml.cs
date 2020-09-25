@@ -15,15 +15,30 @@ namespace StockManagementSystem
     /// </summary>
     public partial class App : Application
     {
+        public static bool IsNotUpdate { get; set; }
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            if (e.Args.Length > 0 && e.Args[0] == "debug")
+            if (e.Args.Length > 0)
             {
-                AllocConsole();
+                if (e.Args[0] == "donotupdate")
+                {
+                    IsNotUpdate = true;
+                    return;
+                }
+                else
+                {
+                    AllocConsole();
+                }
             }
         }
         [SuppressUnmanagedCodeSecurity]
         [DllImport("kernel32.dll")]
         private static extern bool AllocConsole();
+
+        private void Application_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            Console.WriteLine(e.Exception.ToString());
+            e.Handled = true;
+        }
     }
 }

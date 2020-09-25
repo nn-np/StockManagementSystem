@@ -1,4 +1,4 @@
-﻿using data;
+﻿using StockManagementSystem.data;
 using System;
 using System.Collections.Generic;
 using System.Linq;

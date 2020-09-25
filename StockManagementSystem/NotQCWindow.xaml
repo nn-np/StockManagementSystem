@@ -17,7 +17,7 @@
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
         <TextBlock Grid.ColumnSpan="2" x:Name="mTBTitle" Margin="12,12,0,7">
-            <Run FontSize="24" Language="zh-cn">多肽半纯品数据管理</Run>
+            <Run FontSize="24" Text="多肽半纯品数据管理"/>
             <LineBreak/>
             <Run FontWeight="Thin" Text="用于提交半纯品数据或输入[Order ID]、[WoNo]或[坐标]搜索，提交格式：[WoNo]+[Order ID]+[质量]+[原因]+[坐标]+[]+[]+[备注]"/>
             <LineBreak/>
@@ -97,6 +97,9 @@
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right" Margin="0,0,5,0">
                 <TextBlock x:Name="st_tbcount" Foreground="White"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right" Margin="0,0,5,0">
+                <Button Content="切换用户" Click="Button_Click" Tag="changeuser"/>
             </StatusBarItem>
         </StatusBar>
     </Grid>

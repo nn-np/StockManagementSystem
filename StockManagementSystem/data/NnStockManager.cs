@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace data
+namespace StockManagementSystem.data
 {
     /// <summary>
     /// 用于对数据库的操作以及维护等工作
@@ -213,32 +213,192 @@ namespace data
             catch { ShowMessage?.Invoke("文件写入失败", true); }
         }
 
-        // 用于搜索
-        internal string Search(string str)
+        /// <summary>
+        /// 搜索所有
+        /// </summary>
+        internal string SearchAll(string value)
         {
-            List<string> strs = _getSearchStrings(str);
-            StockSearcher stSearcher = new StockSearcher();
-            foreach (var v in strs)
-            {
-                _getSearchValues(v, stSearcher);
-            }
-            string result = stSearcher.ToString();
-            _writeToFileAndOpen(result);
-            return result.Replace(',', '\t');
+            List<SearchItem> list = SearchItem.GetSearchItems(value);
+            NnExcel ne = new NnExcel();
+            ne.Visible = true;
+            // 在库存中搜索
+            _searchStock(list, ne);
+            // 在未QC库中搜索
+            _searchNotQC(list, ne);
+
+            // 在未树脂肽库中搜索
+            _searchResin(list, ne);
+
+            ne.Workbook.Worksheets[1].Activate();
+            return "";
         }
 
-        private List<string> _getSearchStrings(string str)
+        /// <summary>
+        /// 在库存中搜索
+        /// </summary>
+        private void _searchStock(List<SearchItem> list, NnExcel ne)
         {
-            List<string> list = new List<string>();
-            if (string.IsNullOrEmpty(str)) return list;
-            string[] ss = str.Split('\n');
-            foreach (var v in ss)
+            StockSearcher stSearcher = new StockSearcher();
+            foreach (var v in list)
             {
-                if (!string.IsNullOrWhiteSpace(v))
-                    list.Add(v.Trim());
+                _getSearchValues(v.Value, stSearcher);
             }
-            return list;
+            object[][] vs = stSearcher.GetValues();
+
+
+            ne.AddValueWithName(vs, 1, 11, "库存");
+            ne.AutoFit(new int[] { 2, 3, 4 });
+            ne.SetColor(NPoint.GetPoint(1, 1), NPoint.GetPoint(1, 9), NnExcel.ColorType.Blue);
+            ne.SetColor(NPoint.GetPoint(stSearcher.CountNormal + 2, 1), NPoint.GetPoint(stSearcher.CountNormal + 3, 11), NnExcel.ColorType.Blue);
+
         }
+
+        /// <summary>
+        /// 在树脂肽中搜索
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="ne"></param>
+        private void _searchResin(List<SearchItem> list, NnExcel ne)
+        {
+            StockInfos infos = new StockInfos();
+            try
+            {
+                using (OleDbCommand cmd = new OleDbCommand())
+                {
+                    cmd.Connection = m_connection;
+                    foreach (var v in list)
+                    {
+                        if (string.IsNullOrWhiteSpace(v.Value)) continue;
+                        if (v.SearchType == SearchType.WorkNo)
+                        {
+                            _initResinWorkNoSearch(infos, cmd, v);
+                        }
+                        else
+                        {
+                            _initResinCoordinateAndOrderIDSearch(infos, cmd, v);
+                        }
+                    }
+                }
+                object[][] vs = infos.GetValues();
+
+                ne.AddValueWithName(vs, 1, 9, "树脂肽");
+                ne.AutoFit(new int[] { 2, 3, 4, 8 });
+                ne.SetColor(NPoint.GetPoint(1, 1), NPoint.GetPoint(1, 7), NnExcel.ColorType.Blue);
+                ne.SetColor(NPoint.GetPoint(infos.CountNormal + 2, 1), NPoint.GetPoint(infos.CountNormal + 3, 9), NnExcel.ColorType.Blue);
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+        }
+
+        /// <summary>
+        /// 在未QC库中搜索
+        /// </summary>
+        private void _searchNotQC(List<SearchItem> list, NnExcel ne)
+        {
+            StockInfos infos = new StockInfos();
+            try
+            {
+                using (OleDbCommand cmd = new OleDbCommand())
+                {
+                    cmd.Connection = m_connection;
+                    foreach (var v in list)
+                    {
+                        if (string.IsNullOrWhiteSpace(v.Value)) continue;
+                        if (v.SearchType == SearchType.WorkNo)
+                        {
+                            _initNotQCWorkNoSearch(infos, cmd, v);
+                        }
+                        else
+                        {
+                            _initNotQCCoordinateAndOrderIDSearch(infos, cmd, v);
+                        }
+                    }
+                }
+                object[][] vs = infos.GetValues();
+
+                ne.AddValueWithName(vs, 1, 9, "半纯品");
+                ne.AutoFit(new int[] { 2, 3, 4, 8 });
+                ne.SetColor(NPoint.GetPoint(1, 1), NPoint.GetPoint(1, 7), NnExcel.ColorType.Blue);
+                ne.SetColor(NPoint.GetPoint(infos.CountNormal + 2, 1), NPoint.GetPoint(infos.CountNormal + 3, 9), NnExcel.ColorType.Blue);
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+        }
+
+        private void _initNotQCCoordinateAndOrderIDSearch(StockInfos infos, OleDbCommand cmd, SearchItem v)
+        {
+            cmd.Parameters.Clear();
+
+            cmd.CommandText = "SELECT * FROM notqc WHERE Coordinate=@cd";
+            cmd.Parameters.AddWithValue("cd", v.Value);
+
+            bool b = _initNotQCOrderInfo(infos, cmd, v);
+
+            cmd.Parameters.Clear();
+            cmd.CommandText = "SELECT * FROM notqc WHERE OrderId=@id";
+            cmd.Parameters.AddWithValue("id", v.Value);
+
+            _initNotQCOrderInfo(infos, cmd, v, !b);
+        }
+        private void _initResinCoordinateAndOrderIDSearch(StockInfos infos, OleDbCommand cmd, SearchItem v)
+        {
+            cmd.Parameters.Clear();
+
+            cmd.CommandText = "SELECT * FROM resinpeptide WHERE Coordinate=@cd";
+            cmd.Parameters.AddWithValue("cd", v.Value);
+
+            bool b = _initNotQCOrderInfo(infos, cmd, v);
+
+            cmd.Parameters.Clear();
+            cmd.CommandText = "SELECT * FROM resinpeptide WHERE OrderId=@id";
+            cmd.Parameters.AddWithValue("id", v.Value);
+
+            _initNotQCOrderInfo(infos, cmd, v, !b);
+        }
+
+        private bool _initNotQCOrderInfo(StockInfos infos, OleDbCommand cmd, SearchItem v, bool isfirst = false)
+        {
+            bool isFirst = true;
+            using (OleDbDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    OrderInfo od = new OrderInfo();
+                    od.InitNotQCOrderByDB(reader);
+                    od.OriginalString = v.Value;
+                    od.SearchState = od.State == OrderInfo.OrderInfoState.Insert ? SearchState.Normal : SearchState.Deleted;
+                    infos.Add(od);
+                    if (od.State == OrderInfo.OrderInfoState.Insert)
+                        isFirst = false;
+                }
+                if (isFirst && !isfirst)
+                {
+                    OrderInfo od = new OrderInfo() { SearchState = SearchState.None, OriginalString = v.Value };
+                    infos.Add(od);
+                }
+            }
+            return !isFirst;
+        }
+
+
+        private void _initResinWorkNoSearch(StockInfos infos, OleDbCommand cmd, SearchItem v)
+        {
+            cmd.Parameters.Clear();
+
+            cmd.CommandText = "SELECT * FROM resinpeptide WHERE WorkNo=@wn";
+            cmd.Parameters.AddWithValue("wn", v.Value);
+
+            _initNotQCOrderInfo(infos, cmd, v);
+        }
+
+        private void _initNotQCWorkNoSearch(StockInfos infos, OleDbCommand cmd, SearchItem v)
+        {
+            cmd.Parameters.Clear();
+
+            cmd.CommandText = "SELECT * FROM notqc WHERE WorkNo=@wn";
+            cmd.Parameters.AddWithValue("wn", v.Value);
+
+            _initNotQCOrderInfo(infos, cmd, v);
+        }
+
 
         private void _getSearchValues(string s, StockSearcher ss)
         {
@@ -253,7 +413,7 @@ namespace data
             }
             if (!isHas)
             {
-                NnStock ns = new NnStock() { StockSearchState = NnStock.SearchState.None, OriginalString = s };
+                NnStock ns = new NnStock() { StockSearchState = SearchState.None, OriginalString = s };
                 ss.Add(ns);
             }
         }
@@ -372,19 +532,19 @@ namespace data
         /// </summary>
         /// <param name="stock"></param>
         /// <returns></returns>
-        internal int SubmitNotQCOrder(NotQCOrder order)
+        internal int SubmitNotQCOrder(OrderInfo order)
         {
             switch (order.State)
             {
-                case NotQCOrder.NotQCState.Insert:
+                case OrderInfo.OrderInfoState.Insert:
                     return _addNotQCIntoDB(order);
-                case NotQCOrder.NotQCState.Remove:
+                case OrderInfo.OrderInfoState.Remove:
                     return _removeNotQCFromDB(order);
                 default: return 0;
             }
         }
 
-        private int _removeNotQCFromDB(NotQCOrder order)
+        private int _removeNotQCFromDB(OrderInfo order)
         {
             int count = 0;
             try
@@ -404,7 +564,7 @@ namespace data
             return count;
         }
 
-        private int _addNotQCIntoDB(NotQCOrder order)
+        private int _addNotQCIntoDB(OrderInfo order)
         {
             int count = 0;
             try
@@ -426,6 +586,66 @@ namespace data
             return count;
         }
 
+        /// <summary>
+        /// 提交树脂肽数据
+        /// </summary>
+        internal int SubmitResinOrder(OrderInfo order)
+        {
+            switch (order.State)
+            {
+                case OrderInfo.OrderInfoState.Insert:// 添加
+                    return _addResinIntoDB(order);
+                case OrderInfo.OrderInfoState.Remove:// 移除
+                    return _removeResinFromDB(order);
+                default: return 0;
+            }
+        }
+
+        /// <summary>
+        /// 添加树脂肽
+        /// </summary>
+        private int _addResinIntoDB(OrderInfo order)
+        {
+            int count = 0;
+            try
+            {
+                using (OleDbCommand cmd = new OleDbCommand("INSERT INTO resinpeptide (DateAdd,WorkNo,OrderId,Quality,Coordinate,Comments) VALUES(@da,@wn,@oi,@qt,@cd,@cm)", m_connection))
+                {
+                    cmd.Parameters.AddWithValue("da", DateTime.Now.ToString());
+                    cmd.Parameters.AddWithValue("wn", order.WorkNo);
+                    cmd.Parameters.AddWithValue("oi", order.OrderId);
+                    cmd.Parameters.AddWithValue("qt", order.Quality);
+                    cmd.Parameters.AddWithValue("cd", order.Coordinate);
+                    cmd.Parameters.AddWithValue("cm", order.Comments);
+                    count = cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            return count;
+        }
+        /// <summary>
+        /// 移除树脂肽
+        /// </summary>
+        /// <param name="order"></param>
+        /// <returns></returns>
+        private int _removeResinFromDB(OrderInfo order)
+        {
+            int count = 0;
+            try
+            {
+                using (OleDbCommand cmd = new OleDbCommand("UPDATE resinpeptide SET DateRemove=@dr,Coordinate=resinpeptide.ID,Comments=@cs,Cause=@cu WHERE Coordinate=@cd", m_connection))
+                {
+                    cmd.Parameters.AddWithValue("dr", DateTime.Now.ToString());
+                    cmd.Parameters.AddWithValue("cs", order.Comments);
+                    cmd.Parameters.AddWithValue("cu", order.Cause);
+                    cmd.Parameters.AddWithValue("cd", order.Coordinate);
+                    count = cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            return count;
+        }
+
         internal void AllNotQCData()
         {
             StringBuilder sbnew = new StringBuilder();
@@ -441,9 +661,9 @@ namespace data
                     {
                         while (reader.Read())
                         {
-                            NotQCOrder od = new NotQCOrder();
+                            OrderInfo od = new OrderInfo();
                             od.InitNotQCOrderByDB(reader);
-                            if (od.State == NotQCOrder.NotQCState.Insert)
+                            if (od.State == OrderInfo.OrderInfoState.Insert)
                             {
                                 sbnew.Append(od.ToString());
                             }
@@ -456,76 +676,6 @@ namespace data
                 }
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
-            _writeToFileAndOpen(sbnew.ToString() + "\n\n已被移除项目：\n" + sbold.ToString());
-        }
-
-        internal void SearchNotQCData(string str)
-        {
-            StringBuilder sbnew = new StringBuilder();
-            sbnew.Append("搜索关键字,日期,WO号,Order ID,质量,坐标,备注\n");
-
-            StringBuilder sbold = new StringBuilder();
-            sbold.Append("搜索关键字,日期,WO号,Order ID,质量,坐标,备注,取走日期,原因\n");
-
-            try
-            {
-                using (OleDbCommand cmd = new OleDbCommand())
-                {
-                    cmd.Connection = m_connection;
-                    string[] strs = str.Split('\n');
-                    foreach (var v in strs)
-                    {
-                        if (string.IsNullOrWhiteSpace(v)) continue;
-                        cmd.Parameters.Clear();
-                        int flg = v.IndexOf('-');
-                        if (flg < 0)
-                        {
-                            cmd.CommandText = "SELECT * FROM notqc WHERE WorkNo=@wn";
-                            cmd.Parameters.AddWithValue("wn", v.TrimEnd());
-                        }
-                        else if (flg < 7)// 坐标
-                        {
-                            cmd.CommandText = "SELECT * FROM notqc WHERE Coordinate=@cd";
-                            cmd.Parameters.AddWithValue("cd", v.TrimEnd());
-                        }
-                        else// OrderID
-                        {
-                            cmd.CommandText = "SELECT * FROM notqc WHERE OrderId=@id";
-                            cmd.Parameters.AddWithValue("id", v.TrimEnd());
-                        }
-                        using (OleDbDataReader reader = cmd.ExecuteReader())
-                        {
-                            sbold.Append(v.TrimEnd()).Append(',');
-                            sbnew.Append(v.TrimEnd()).Append(',');
-                            bool isFirst = true;
-                            bool isNewFirst = true;
-                            while (reader.Read())
-                            {
-                                NotQCOrder od = new NotQCOrder();
-                                od.InitNotQCOrderByDB(reader);
-                                if (od.State == NotQCOrder.NotQCState.Insert)
-                                {
-                                    if (!isNewFirst)
-                                        sbnew.Append("").Append(',');
-                                    isNewFirst = false;
-                                    sbnew.Append(od.ToString());
-                                }
-                                else
-                                {
-                                    if (!isFirst)
-                                        sbold.Append("").Append(',');
-                                    isFirst = false;
-                                    sbold.Append(od.ToString());
-                                }
-                            }
-                            if (isNewFirst) sbnew.Append('\n');
-                            if (isFirst) sbold.Append('\n');
-                        }
-                    }
-                }
-            }
-            catch (Exception e) { Console.WriteLine(e.ToString()); }
-
             _writeToFileAndOpen(sbnew.ToString() + "\n\n已被移除项目：\n" + sbold.ToString());
         }
 
@@ -809,16 +959,6 @@ namespace data
             catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
 
-        // 从数据库读取数据
-        private OleDbDataReader _executeReader(string sql)
-        {
-            using (OleDbCommand cmd = m_connection.CreateCommand())
-            {
-                cmd.CommandText = sql;
-                return cmd.ExecuteReader();
-            }
-        }
-
         private void init()
         {
             IsValid = true;
@@ -963,68 +1103,6 @@ namespace data
                 }
             }
             return value;
-        }
-    }
-    class StockSearcher
-    {
-        private List<NnStock> mNormalList;// 正常
-        private List<NnStock> mLList;// 临时坐标
-        private List<NnStock> mRemoveList;// 已移除
-
-        public StockSearcher()
-        {
-            mNormalList = new List<NnStock>();
-            mLList = new List<NnStock>();
-            mRemoveList = new List<NnStock>();
-        }
-
-        public void Add(NnStock stock)
-        {
-            switch (stock.StockSearchState)
-            {
-                case NnStock.SearchState.None:// 没有结果
-                    mNormalList.Add(stock);
-                    break;
-                case NnStock.SearchState.Normal:// 正常
-                    mNormalList.Add(stock);
-                    break;
-                case NnStock.SearchState.Temporary:// 临时坐标
-                    mLList.Add(stock);
-                    break;
-                case NnStock.SearchState.Deleted:// 已移除
-                    mRemoveList.Add(stock);
-                    break;
-                default:
-                    mNormalList.Add(stock);
-                    break;
-            }
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("KeyWord,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,备注,\n");
-            foreach(var v in mNormalList)
-            {
-                if (v.StockSearchState == NnStock.SearchState.None)
-                {
-                    sb.Append(v.OriginalString.Replace(",", "")).Append(",,无记录！,\n");
-                }
-                else
-                {
-                    sb.Append(v.OriginalString.Replace(",", "")).Append(",").Append(v.ToString()).Append(",\n");
-                }
-            }
-            foreach(var v in mLList)
-            {
-                sb.Append(v.OriginalString.Replace(",", "")).Append(",").Append(v.ToString()).Append(",\n");
-            }
-            sb.Append("\n\n已被移除项目：\nKeyWord,RemoveDate,AddDate,WorkNo,OrderID,Qualit,Coordinate,Purity,Mw,备注,Cause,\n");
-            foreach(var v in mRemoveList)
-            {
-                sb.Append(v.OriginalString.Replace(",", "")).Append(",").Append(v.DateRemove.ToShortDateString()).Append(',').Append(v.ToString()).Append(v.Cause).Append('\n');
-            }
-            return sb.ToString();
         }
     }
 }

@@ -11,36 +11,66 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="1*"/>
-            <RowDefinition Height="4*"/>
+            <RowDefinition Height="3*"/>
             <RowDefinition Height="2*"/>
             <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
-        <TextBlock x:Name="mTBWorring" Foreground="#FFCA5100" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
-        <StackPanel VerticalAlignment="Top" Grid.Row="1">
-            <TextBlock Text="用户名："/>
-            <TextBox x:Name="userName" VerticalAlignment="Center" FontSize="14"/>
-            <TextBlock Text="密码：" Margin="0,12,0,0"/>
-            <PasswordBox x:Name="password" VerticalAlignment="Center" FontSize="14"/>
-        </StackPanel>
-        <Grid Grid.Row="3" VerticalAlignment="Center">
-            <CheckBox x:Name="isSkip" Content="记住我的选择" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
-            <TextBlock VerticalAlignment="Center" Margin="50,0,0,0" HorizontalAlignment="Right">
-            <Hyperlink FontSize="15" Click="click_new" TextDecorations="{x:Null}">
-                <TextBlock TextDecorations="{x:Null}">新建账号</TextBlock>
-            </Hyperlink>
-            <LineBreak/>
-            <Hyperlink  FontSize="14" Click="click_skip" TextDecorations="{x:Null}">
-                <TextBlock HorizontalAlignment="Right">跳过</TextBlock>
-            </Hyperlink>
-        </TextBlock>
-        </Grid>
-        <Grid Grid.Row="2">
+
+        <TextBlock x:Name="mTBWorring" Foreground="#FFCA5100" HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="16"/>
+
+        <Grid Grid.Row="1" VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button x:Name="mBTLogin" VerticalAlignment="Center" Content="登陆库存" Margin="12,0" FontSize="16" Click="click_login" IsDefault="True"/>
-            <Button Grid.Column="1" VerticalAlignment="Center" Content="登陆半纯品库" Margin="12,0" FontSize="16" Click="click_login2"/>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="用户名：" Margin="5" VerticalAlignment="Center" Foreground="White" Background="#FF878787" Padding="5,2" HorizontalAlignment="Left" FontWeight="Light" Width="70"/>
+            <TextBlock Grid.Row="1" Text="密码：" Margin="5" VerticalAlignment="Center" Foreground="White" Background="#FF878787" Padding="5,2" HorizontalAlignment="Left" FontWeight="Light" Width="70"/>
+            <TextBlock Grid.Row="2" Text="登录类型：" Margin="5" VerticalAlignment="Center" Foreground="White" Background="#FF878787" Padding="5,2" HorizontalAlignment="Left" FontWeight="Light"/>
+
+            <TextBox x:Name="userName" Grid.Column="1" VerticalAlignment="Center" FontSize="14"/>
+            <PasswordBox x:Name="password" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" FontSize="14"/>
+            <ComboBox Name="mCBType" Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" />
+        </Grid>
+
+        <Button Grid.Row="2" Click="Button_Click" Tag="login" VerticalAlignment="Center" Content="登 陆" FontSize="16" IsDefault="True"/>
+
+        <Grid Grid.Row="3" VerticalAlignment="Center">
+            <CheckBox x:Name="isSkip" Content="记住我的选择" HorizontalAlignment="Left" VerticalAlignment="Bottom" Foreground="#FFF3F3F3"/>
+            <TextBlock VerticalAlignment="Center" Margin="50,0,0,0" HorizontalAlignment="Right">
+            <Hyperlink FontSize="15" Click="click_new" TextDecorations="{x:Null}" Foreground="#FFF3F3F3">
+                <TextBlock TextDecorations="{x:Null}" Text="新建账号">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="#FF939393"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                </TextBlock>
+            </Hyperlink>
+            <LineBreak/>
+            <Hyperlink FontSize="14" Click="click_skip" TextDecorations="{x:Null}" Foreground="#FFF3F3F3">
+                <TextBlock HorizontalAlignment="Right" Text="跳过">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="#FF939393"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                </TextBlock>
+            </Hyperlink>
+        </TextBlock>
         </Grid>
     </Grid>
 </Page>

@@ -1,0 +1,158 @@
+﻿<Window x:Class="AutomaticGroupSemipureStock.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AutomaticGroupSemipureStock"
+        mc:Ignorable="d"
+        Title="自动组半纯品库" Height="450" Width="800" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <SolidColorBrush x:Key="MenuBackground" Color="#CCE4E4E4"/>
+
+        <!--左侧列表样式-->
+        <DataTemplate x:Key="ListBoxItem">
+            <Grid Margin="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <ContentControl Template="{Binding Path=Image}" Width="32" Height="32"/>
+                <TextBlock Grid.Column="1" Margin="3" Text="{Binding Path=Title}" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
+            </Grid>
+        </DataTemplate>
+
+        <!--左侧列表Style-->
+        <SolidColorBrush x:Key="Item.MouseOver.Background" Color="#1F26A0DA"/>
+        <SolidColorBrush x:Key="Item.SelectedInactive.Background" Color="#FFBEDBEC"/>
+        <SolidColorBrush x:Key="Item.SelectedActive.Background" Color="#FFBEDBEC"/>
+        <SolidColorBrush x:Key="LeftListBoxItemBackground" Color="#FFECECEC"/>
+        <Style x:Key="LeftListBoxItemStyle" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Padding" Value="4,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+            <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#FF234567"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Border Padding="5" x:Name="Bd" Background="{StaticResource LeftListBoxItemBackground}" MinWidth="80" SnapsToDevicePixels="true">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Rectangle x:Name="RG" Margin="0,5,3,5" Fill="#FFCA5100" Width="3" Visibility="Hidden"/>
+                                <ContentPresenter Grid.Column="1" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.MouseOver.Background}"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="Selector.IsSelectionActive" Value="False"/>
+                                    <Condition Property="IsSelected" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.SelectedInactive.Background}"/>
+                                <Setter Property="Foreground" Value="#FFCA5100"/>
+                                <Setter Property="Visibility" TargetName="RG" Value="Visible"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="Selector.IsSelectionActive" Value="True"/>
+                                    <Condition Property="IsSelected" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.SelectedActive.Background}"/>
+                                <Setter Property="Foreground" Value="#FFCA5100"/>
+                                <Setter Property="Visibility" TargetName="RG" Value="Visible"/>
+                            </MultiTrigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="TextElement.Foreground" TargetName="Bd" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <ControlTemplate x:Key="order_title1">
+            <Viewbox Margin="5">
+                <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="ROshuichundu" Width="742.667" Height="993.333" Clip="F1 M 0,0L 742.667,0L 742.667,993.333L 0,993.333L 0,0">
+                    <Canvas x:Name="ROshuichundu_0" Width="742.667" Height="993.333" Canvas.Left="0" Canvas.Top="0">
+                        <Path x:Name="Path" Width="742.016" Height="993.964" Canvas.Left="0" Canvas.Top="-0.630615" Stretch="Fill" Fill="#FF009664" Data="F1 M 742.016,571.719L 741.287,560.796L 740.557,550.599L 738.369,540.405L 736.188,531.667L 734.005,521.473L 731.817,511.281L 728.907,502.541L 725.995,492.343L 722.355,483.609L 719.437,473.411L 715.797,464.676L 712.156,454.479L 708.516,445.744L 703.421,437.005L 698.323,428.265L 689.584,410.063L 680.12,391.859L 669.197,373.651L 658.271,356.905L 647.349,340.885L 635.697,324.864L 614.584,295.009L 565.068,230.932L 535.208,193.791L 475.5,122.432L 417.245,53.2547L 372.828,-0.630615L 278.161,111.509L 214.083,187.968L 181.317,225.833L 149.276,266.609L 125.973,297.921L 103.401,329.963L 91.7493,345.984L 70.636,380.208L 61.1667,396.953L 51.7027,415.161L 42.964,432.635L 37.864,441.375L 34.224,450.109L 26.9427,467.588L 24.0307,476.328L 20.3907,486.52L 16.7493,495.26L 14.5627,503.995L 11.6507,512.733L 8.74,522.927L 6.552,533.124L 5.82267,541.864L 4.36933,552.057L 3.64,562.249L 2.912,572.448L 2.18267,583.369L 2.18267,593.563L 0,603.031L 0.729333,613.953L 0.729333,624.145L 1.45867,635.067L 2.18267,645.265L 2.912,656.187L 5.09867,666.38L 5.82267,677.301L 8.74,687.5L 10.9213,697.692L 13.8333,708.615L 16.0213,718.807L 18.932,729.005L 22.5733,739.197L 25.484,749.391L 29.1253,759.588L 32.7653,769.781L 37.864,778.52L 41.5053,788.713L 46.604,797.453L 51.7027,807.645L 57.5267,816.385L 62.6253,824.396L 68.448,833.135L 74.276,841.145L 80.0987,849.88L 86.6507,857.891L 93.208,865.9L 107.771,881.192L 114.323,888.473L 122.333,895.755L 137.625,908.864L 145.636,914.687L 154.375,920.515L 162.385,926.339L 171.12,932.167L 179.86,937.26L 188.599,943.088L 197.339,948.187L 206.073,952.552L 214.812,957.651L 224.281,962.02L 233.016,966.391L 242.484,970.76L 251.948,973.672L 261.416,976.583L 270.88,979.495L 280.349,982.411L 289.812,984.593L 300.74,986.781L 310.203,988.963L 321.125,991.145L 330.593,991.875L 341.516,992.604L 350.979,993.333L 392.489,993.333L 403.412,992.604L 412.875,991.875L 423.797,991.145L 442.735,986.781L 453.656,984.593L 463.12,982.411L 472.588,979.495L 482.052,976.583L 491.521,973.672L 500.26,970.76L 519.917,962.749L 528.656,958.38L 538.125,953.281L 546.86,948.911L 555.599,943.817L 564.339,937.989L 573.079,932.896L 581.083,927.067L 589.823,921.244L 597.833,915.416L 605.844,909.593L 621.136,895.755L 629.145,888.473L 635.697,881.192L 642.255,873.181L 650.26,865.9L 656.817,857.891L 656.817,857.161L 662.64,849.151L 669.197,841.145L 675.021,833.135L 680.12,824.396L 685.943,815.656L 691.041,806.916L 696.136,798.181L 701.235,789.443L 704.875,779.249L 709.973,770.509L 713.615,760.317L 717.255,750.12L 720.167,739.927L 723.807,729.733L 726.724,719.536L 729.636,709.343L 731.817,698.421L 734.005,688.224L 736.917,678.031L 737.645,667.109L 739.828,656.916L 740.557,645.989L 741.287,635.796L 742.016,624.875M 672.109,618.323L 671.38,626.333L 670.651,635.067L 669.921,643.077L 669.197,651.817L 668.469,660.557L 666.281,668.567L 664.099,677.301L 661.912,685.312L 659.729,693.323L 656.817,702.063L 653.901,710.072L 648.079,726.093L 645.167,734.099L 641.527,742.109L 638.609,750.12L 634.969,757.4L 631.328,765.411L 627.688,772.692L 622.593,779.973L 618.953,787.26L 609.484,801.093L 604.385,806.916L 598.563,814.203L 581.083,832.405L 575.26,837.5L 568.708,843.328L 562.88,848.427L 549.047,858.62L 542.495,862.989L 535.937,868.083L 529.385,872.453L 521.375,876.823L 514.823,881.192L 506.812,884.104L 500.26,887.02L 492.251,891.385L 484.24,893.572L 468.219,899.396L 460.208,901.583L 452.197,903.765L 444.188,905.953L 435.448,908.135L 427.443,908.864L 419.432,911.047L 410.693,911.776L 402.683,912.505L 394.672,912.505L 385.932,913.233L 353.167,913.233L 345.156,912.505L 336.416,911.776L 321.125,909.593L 312.391,908.864L 304.38,906.676L 296.369,905.953L 290.541,901.583L 282.531,899.396L 274.521,896.484L 266.516,894.301L 258.505,891.385L 242.484,885.563L 235.927,882.651L 227.921,878.281L 221.364,873.911L 213.355,869.541L 200.251,860.801L 193.693,855.708L 187.14,851.339L 181.317,846.239L 174.76,841.145L 168.937,835.317L 163.109,830.219L 145.636,812.015L 140.536,806.192L 134.713,798.911L 131.073,793.083L 120.875,778.52L 117.235,771.239L 112.14,763.229L 108.5,755.948L 104.86,747.937L 101.943,739.927L 98.3027,732.645L 92.4787,716.624L 89.568,707.885L 86.6507,699.875L 84.4693,691.864L 81.5573,683.129L 79.3693,675.12L 77.188,666.38L 75,658.369L 74.276,649.629L 73.5467,641.624L 72.8173,632.885L 72.088,624.875L 72.088,610.312L 71.36,601.572L 72.088,593.563L 72.088,576.812L 72.8173,568.807L 75,552.787L 76.4587,544.047L 78.64,536.036L 80.828,528.025L 83.74,519.287L 85.9267,511.281L 89.568,503.271L 92.4787,494.531L 95.3907,486.52L 99.0307,478.509L 102.672,469.771L 106.312,461.76L 111.412,453.025L 120.151,436.276L 129.615,420.255L 150.735,386.031L 173.307,353.995L 195.88,321.953L 218.453,292.099L 255.588,246.224L 292.729,201.072L 366.271,113.692L 369.917,109.323L 372.099,106.411L 372.828,105.681L 373.557,106.411L 375.74,108.599L 382.292,115.88L 388.12,123.891L 391.031,126.072C 391.031,126.072 391.031,126.801 391.76,126.801L 458.027,206.172L 492.973,248.405L 527.203,291.369L 541.765,310.301L 559.969,334.333L 580.36,364.187L 592.011,380.937L 602.932,397.681L 614.584,415.885L 625.505,434.817L 630.604,443.557L 635.697,453.755L 640.797,463.948L 644.437,472.687L 649.536,482.88L 653.177,493.072L 656.817,501.812L 659.729,512.005L 661.912,522.927L 664.099,527.296L 664.828,532.396L 665.552,537.495L 666.281,542.588L 667.011,546.957L 667.74,552.057L 669.921,560.067L 670.651,568.077L 670.651,576.088L 671.38,584.823L 671.38,618.323"/>
+                    </Canvas>
+                </Canvas>
+            </Viewbox>
+        </ControlTemplate>
+        <ControlTemplate x:Key="order_title2">
+            <Viewbox Margin="3">
+                <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="molecular__pathology" Width="1052" Height="790.667" Clip="F1 M 0,0L 1052,0L 1052,790.667L 0,790.667L 0,0">
+                    <Canvas x:Name="molecular_pathology" Width="1052" Height="790.667" Canvas.Left="0" Canvas.Top="0">
+                        <Path x:Name="Path" Width="1044.06" Height="787.095" Canvas.Left="2.78753" Canvas.Top="0.102074" Stretch="Fill" Fill="#FF1296DB" Data="F1 M 352.427,0.124023C 361.423,0.192017 370.032,3.78534 376.328,10.1508C 382.719,16.572 386.188,25.28 386.027,34.1454L 385.995,126.473L 573.355,236.151L 767.521,130.364L 767.521,40.604C 767.136,31.5827 770.579,22.8174 777,16.4733C 783.427,10.124 792.235,6.79071 801.251,7.29071C 819.885,7.29071 835.047,22.228 835.047,40.7333L 835.047,152.208C 835.047,161.203 831.385,169.843 824.865,176.14C 819.563,181.28 812.656,184.556 808.188,184.495L 608.147,293.4L 604.672,504.88L 790.615,613.723L 996.797,501.473C 1004.59,496.957 1013.89,495.771 1022.57,498.187C 1031.25,500.609 1038.59,506.427 1042.93,514.328C 1051.51,530.583 1045.56,550.661 1029.37,559.749L 825.251,670.937L 825.251,754.4C 825.089,763.296 821.328,771.749 814.869,777.885C 801.396,790.667 780.147,790.239 767.199,776.921C 760.964,770.525 757.557,761.947 757.751,753.213L 757.751,672.061L 567.407,560.681L 356.667,677.556C 351.849,678.713 346.803,678.843 341.885,677.943C 337.068,678.713 331.927,678.52 324.989,676.656L 124.203,556.312L 53.464,597.755C 44.5054,603 33.6254,603.828 23.9747,599.995C 14.3227,596.156 6.9747,588.093 4.05737,578.129C 3.59217e-005,563.817 5.8907,548.547 18.5107,540.671L 89.412,499.161L 93.2707,267.088C 92.7134,254.957 98.86,243.5 109.265,237.244L 316.959,124.807L 316.959,32.796C 317.344,23.7707 321.297,15.2548 327.98,9.11865C 334.625,3.04675 343.396,-0.198608 352.427,0.124023 Z M 349.532,183.817L 160.188,286.78L 156.651,497.749L 342.593,606.588L 532.005,503.599L 535.475,292.629L 349.5,183.817M 252.292,300.5C 261.287,300.561 269.896,304.161 276.193,310.52C 282.552,316.947 286.052,325.619 285.86,334.489L 285.86,460.353C 285.536,469.681 281.391,478.463 274.396,484.64C 267.407,490.823 258.177,493.853 248.885,493.025C 239.964,492.864 231.469,489.197 225.24,482.812C 219.041,476.385 215.604,467.807 215.797,458.911L 218.365,333.619C 218.172,324.656 221.74,316.015 228.229,309.719C 234.651,303.52 243.328,300.176 252.323,300.5"/>
+                    </Canvas>
+                </Canvas>
+            </Viewbox>
+        </ControlTemplate>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <Menu x:Name="mMenu" Grid.ColumnSpan="2" Background="{StaticResource MenuBackground}">
+            <!--<MenuItem Header="设置" Click="MenuItem_Click" Tag="setter"/>
+            <MenuItem Header="打开表格" Click="MenuItem_Click" Tag="opentable"/>-->
+        </Menu>
+        <!--<ListBox Visibility="Collapsed" Grid.Row="1" Grid.RowSpan="2" x:Name="mLBMain" BorderBrush="#FFA2A2A2" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" MinWidth="50" ItemTemplate="{StaticResource ListBoxItem}" 
+                 ItemContainerStyle="{StaticResource LeftListBoxItemStyle}" SelectionChanged="MLBMain_SelectionChanged" BorderThickness="0"
+                 Background="{StaticResource MenuBackground}"/>-->
+
+        <Frame x:Name="mFrame" Grid.Column="1" Grid.Row="1" NavigationUIVisibility="Hidden"/>
+
+        <StatusBar x:Name="mStatusBar" Grid.ColumnSpan="2" Grid.Row="2" Background="#FF007ACC">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            <TextBlock x:Name="sbLeft" Text="就绪" Foreground="White"/>
+            <StatusBarItem Grid.Column="3" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Padding="3,4" HorizontalAlignment="Right" MinWidth="120">
+                <ProgressBar x:Name="sbProgress" Background="Transparent" Foreground="White" Visibility="Collapsed"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="4" >
+                <TextBlock x:Name="sbCenter" Foreground="White"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="6" >
+                <TextBlock x:Name="sbRight" Foreground="White"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="7" Background="{x:Null}" >
+                <TextBlock x:Name="mTBVersion" Foreground="White"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>

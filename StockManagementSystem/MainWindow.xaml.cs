@@ -1,4 +1,4 @@
-﻿using data;
+﻿using StockManagementSystem.data;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -49,9 +49,7 @@ namespace StockManagementSystem
                 mTBTitle.Inlines.Add(new LineBreak());
                 mTBTitle.Inlines.Add(run2);
 
-                mBTSearchNotQC.Visibility = Visibility.Visible;
-                mBTSearchStock.Visibility = Visibility.Visible;
-                mBTSearch.Visibility = Visibility.Collapsed;
+                //mBTSearch.Visibility = Visibility.Collapsed;
                 mBTSubmit.Visibility = Visibility.Collapsed;
                 mBTCoordinate.Visibility = Visibility.Collapsed;
             }
@@ -87,8 +85,18 @@ namespace StockManagementSystem
                 _showMessage("初始化失败，无法搜索！", false);
                 return;
             }
+
             new Thread(_search).Start(m_tb.Text.Trim());
             _statusBarState("正在搜索...", true);
+        }
+
+        private void _updateTBMain(string str)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                m_tb.AppendText(str);
+                m_tb.ScrollToEnd();
+            });
         }
 
         /// <summary>
@@ -98,8 +106,13 @@ namespace StockManagementSystem
         {
             string value = o as string;
             if (value == null) return;
-            string str = m_manager.Search(value);
-            this.Dispatcher.Invoke(new TextBoxUpdate(_textBoxUpdate), "\n\n------------\n"+str);
+
+            _updateTBMain("\n\n-----开始搜索-------\n");
+
+            string str = m_manager.SearchAll(value);
+
+            _updateTBMain("\n------搜索结束，搜索结果已在Excel表格中打开------" + str);
+
             _statusBarState("就绪", false);
         }
 
@@ -329,21 +342,15 @@ namespace StockManagementSystem
             m_tb.Clear();
         }
 
-        /// <summary>
-        /// 搜索半纯品
-        /// </summary>
-        private void click_searchNotQc(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
-            new Thread(_searchNotQC).Start(m_tb.Text);
-        }
-
-        private void _searchNotQC(object o)
-        {
-            string str = o as string;
-            if (string.IsNullOrWhiteSpace(str)) return;
-            _statusBarState("正在搜索...", true);
-            m_manager.SearchNotQCData(str);
-            _statusBarState("就绪", false);
+            switch (((Control)sender).Tag)
+            {
+                case "changeuser":// 切换用户
+                    Start.ChangeUser();
+                    this.Close();
+                    break;
+            }
         }
     }
 }

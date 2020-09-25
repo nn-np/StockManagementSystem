@@ -1,4 +1,4 @@
-﻿using data;
+﻿using StockManagementSystem.data;
 using StockManagementSystem.pages;
 using System;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ using System.Windows.Shapes;
 namespace StockManagementSystem
 {
     /// <summary>
-    /// PageLogin.xaml 的交互逻辑
+    /// 登录页面
     /// </summary>
     public partial class PageLogin : Page
     {
@@ -30,8 +30,12 @@ namespace StockManagementSystem
         public PageLogin(Window window)
         {
             InitializeComponent();
-            userName.Text = _getStringFromConfiguration("lastUser");
+
+            userName.Text = ConfigurationManager.AppSettings["lastUser"];
             mParent = window;
+            mCBType.ItemsSource = new string[] { "库存", "半纯品", "树脂肽" };
+            int.TryParse(ConfigurationManager.AppSettings["loginType"], out int ind);
+            mCBType.SelectedIndex = ind;
         }
 
         // 新建账号
@@ -50,8 +54,7 @@ namespace StockManagementSystem
         // 跳过
         private void click_skip(object sender, RoutedEventArgs e)
         {
-            if (isSkip.IsChecked != null && (bool)isSkip.IsChecked)
-                _updateConfiguration("isSkip", true.ToString());
+            data.Tools.SetConfiguration("isSkip", isSkip.IsChecked.ToString());
 
             MainWindow window = new MainWindow();
             Application.Current.MainWindow = window;
@@ -59,37 +62,21 @@ namespace StockManagementSystem
             mParent.Close();
         }
 
-        // 更新配置文件
-        private void _updateConfiguration(string key, string value)
+
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
-            Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            if (configuration.AppSettings.Settings[key] != null)
-                configuration.AppSettings.Settings[key].Value = value;
-            else
-                configuration.AppSettings.Settings.Add(key, value);
-            configuration.Save();
+            switch (((Control)sender).Tag)
+            {
+                case "login":
+                    _login();
+                    break;
+            }
         }
-
-        // 从配文件获取字符串
-        private string _getStringFromConfiguration(string key)
+        /// <summary>
+        /// 登录
+        /// </summary>
+        private void _login()
         {
-            return ConfigurationManager.AppSettings[key];
-        }
-
-        // 登陆
-        private void click_login(object sender, RoutedEventArgs e)
-        {
-            _toLogin(true);
-        }
-
-        private void click_login2(object sender, RoutedEventArgs e)
-        {
-            _toLogin(false);
-        }
-
-        private void _toLogin(bool isStock)
-        {
-
             if (mManager == null)
                 mManager = ((Start)mParent).StockManager;
             if (mManager == null || !mManager.IsValid)
@@ -104,16 +91,29 @@ namespace StockManagementSystem
             }
             if (mManager.IsPassed(userName.Text, NnConnection.GetMD5String(password.Password)))
             {
-                _updateConfiguration("lastUser", userName.Text);
-                Window window;
-                if (isStock)
+                Window window = null;
+                int i = mCBType.SelectedIndex;
+                i = i < 0 ? 0 : i;
+                switch (i)
                 {
-                    window = new MainWindow(true);
+                    case 0:// 库存
+                        window = new MainWindow(true);
+                        break;
+                    case 1:// 半纯品
+                        window = new NotQCWindow();
+                        break;
+                    case 2:// 树脂肽
+                        window = new ResinWindow();
+                        break;
+                    default:
+                        window = new MainWindow(true);
+                        break;
                 }
-                else
-                {
-                    window = new NotQCWindow();
-                }
+                // 保存登录类别
+                data.Tools.SetConfiguration("loginType", mCBType.SelectedIndex.ToString());
+                data.Tools.SetConfiguration("lastUser", userName.Text);
+                data.Tools.SetConfiguration("isSkip", isSkip.IsChecked.ToString());
+                // 打登录后窗口
                 Application.Current.MainWindow = window;
                 window.Show();
                 mParent.Close();

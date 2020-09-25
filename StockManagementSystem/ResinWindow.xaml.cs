@@ -17,14 +17,18 @@ using System.Windows.Shapes;
 namespace StockManagementSystem
 {
     /// <summary>
-    /// 未QC库数据管理
+    /// 树脂肽页面
     /// </summary>
-    public partial class NotQCWindow : Window
+    public partial class ResinWindow : Window
     {
         private NnStockManager mManager;
-        public NotQCWindow()
+
+        public bool IsPassed { get; internal set; }
+
+        public ResinWindow()
         {
             InitializeComponent();
+
             mManager = new NnStockManager(_showMessage);
             if (!mManager.IsValid)
             {
@@ -34,19 +38,25 @@ namespace StockManagementSystem
             _statusBarState("就绪", false);
         }
 
+        private void _showMessage(string message, bool isError = false)
+        {
+            this.Dispatcher.Invoke(() => new NnMessage(message, isError).Show());
+            Console.WriteLine(message);
+        }
+
         /// <summary>
         /// 搜索库存
         /// </summary>
         private void click_search(object sender, RoutedEventArgs e)
         {
-            if (mManager == null || string.IsNullOrWhiteSpace(mTBMain.Text))
+            if (mManager == null || string.IsNullOrWhiteSpace(m_tb.Text))
                 return;
             if (!mManager.IsValid)
             {
                 _showMessage("初始化失败，无法搜索！", false);
                 return;
             }
-            new Thread(_search).Start(mTBMain.Text.Trim());
+            new Thread(_search).Start(m_tb.Text.Trim());
             _statusBarState("正在搜索...", true);
         }
 
@@ -67,35 +77,26 @@ namespace StockManagementSystem
             _statusBarState("就绪", false);
         }
 
-        private void click_alldata(object sender, RoutedEventArgs e)
-        {
-            _statusBarState("正在读取...", true);
-            new Thread(_output).Start();
-        }
-
-        private void _output()
-        {
-            mManager.AllNotQCData();
-
-            _statusBarState("就绪", false);
-        }
-
+        // 提交库存按钮
         private void click_submit(object sender, RoutedEventArgs e)
         {
-            if (mManager == null || string.IsNullOrWhiteSpace(mTBMain.Text)) return;
-            new Thread(_submit).Start(mTBMain.Text);
+            if (mManager == null || string.IsNullOrWhiteSpace(m_tb.Text)) return;
+            new Thread(_submit).Start(m_tb.Text);
             _statusBarState("正在提交...", true);
         }
 
+        // 提交
         private void _submit(object o)
         {
+            string str = o as string;
+            if (str == null) return;
+
             StringBuilder errorstr = new StringBuilder();
+
             _updateTBMain("\n\n--------------\n");
-            string value = o as string;
-            if (value == null) return;
 
             int counts = 0, successcount = 0;
-            string[] values = value.Split('\n');
+            string[] values = str.Split('\n');
             foreach (var v in values)
             {
                 if (string.IsNullOrWhiteSpace(v)) continue;
@@ -103,7 +104,7 @@ namespace StockManagementSystem
                 OrderInfo order = new OrderInfo(v);
                 if (order.IsAvailable)
                 {
-                    int count = mManager.SubmitNotQCOrder(order);
+                    int count = mManager.SubmitResinOrder(order);
                     string showStr = _getSubmitFeedback(v, order, count, errorstr);
                     if (count > 0) ++successcount;
                     _updateTBMain(showStr);
@@ -155,35 +156,35 @@ namespace StockManagementSystem
             return showStr;
         }
 
-        private void _updateTBMain(string str)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                mTBMain.AppendText(str);
-                mTBMain.ScrollToEnd();
-            });
-        }
-
-        private void _statusBarState(string value, bool isWarning)
+        private void _statusBarState(string value = "就绪", bool isWarning = false)
         {
             this.Dispatcher.Invoke(() =>
             {
                 st_tbstate.Text = value;
-                mSBMain.Background = isWarning ? new SolidColorBrush(Color.FromRgb(0xCA, 0x51, 0x00))
+                st_bar.Background = isWarning ? new SolidColorBrush(Color.FromRgb(0xCA, 0x51, 0x00))
                     : new SolidColorBrush(Color.FromRgb(0x00, 0x7A, 0xCC));
             });
         }
 
-        private void _showMessage(string message, bool isError = false)
+        private void _updateTBMain(string str)
         {
-            this.Dispatcher.Invoke(() => new NnMessage(message, isError).Show());
-            Console.WriteLine(message);
+            Dispatcher.Invoke(() =>
+            {
+                m_tb.AppendText(str);
+                m_tb.ScrollToEnd();
+            });
+        }
+
+        // 窗口开始活动
+        private void m_activited(object sender, EventArgs e)
+        {
+            m_tb.Focus();
         }
 
         // textchanged
         private void m_textcanged(object sender, TextChangedEventArgs e)
         {
-            string str = mTBMain.Text.Trim() + "\r\n";
+            string str = m_tb.Text.Trim() + "\r\n";
             int i = str.IndexOf("\r\n"), j = 0;
             int count = 0;
             while (i > 0)
@@ -196,30 +197,10 @@ namespace StockManagementSystem
             st_tbcount.Text = count + "条";
         }
 
-        // 窗口开始活动
-        private void m_activited(object sender, EventArgs e)
-        {
-            mTBMain.Focus();
-        }
-
         // 输入框被双击
         private void tb_doubleclick(object sender, MouseButtonEventArgs e)
         {
-            mTBMain.Clear();
-        }
-        /// <summary>
-        /// 坐标
-        /// </summary>
-        private void click_coordinate(object sender, RoutedEventArgs e)
-        {
-            new Thread(_outputCoordinate).Start();
-        }
-
-        private void _outputCoordinate()
-        {
-            _statusBarState("正在读取...", true);
-            mManager.OutputNotQCCoordinate();
-            _statusBarState("就绪", false);
+            m_tb.Clear();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockManagementSystem", "St
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShippingTools", "ShippingTools\ShippingTools.csproj", "{992B48E1-F928-4B05-93F0-97BB72159596}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutomaticGroupSemipureStock", "AutomaticGroupSemipureStock\AutomaticGroupSemipureStock.csproj", "{775679AE-3C7C-4739-A548-F47CB886904F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,14 @@ Global
 		{992B48E1-F928-4B05-93F0-97BB72159596}.Release|Any CPU.Build.0 = Release|Any CPU
 		{992B48E1-F928-4B05-93F0-97BB72159596}.Release|x64.ActiveCfg = Release|Any CPU
 		{992B48E1-F928-4B05-93F0-97BB72159596}.Release|x64.Build.0 = Release|Any CPU
+		{775679AE-3C7C-4739-A548-F47CB886904F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{775679AE-3C7C-4739-A548-F47CB886904F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{775679AE-3C7C-4739-A548-F47CB886904F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{775679AE-3C7C-4739-A548-F47CB886904F}.Debug|x64.Build.0 = Debug|Any CPU
+		{775679AE-3C7C-4739-A548-F47CB886904F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{775679AE-3C7C-4739-A548-F47CB886904F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{775679AE-3C7C-4739-A548-F47CB886904F}.Release|x64.ActiveCfg = Release|Any CPU
+		{775679AE-3C7C-4739-A548-F47CB886904F}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace data
+namespace StockManagementSystem.data
 {
     /// <summary>
     /// 用于获取配置文件
