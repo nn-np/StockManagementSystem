@@ -1,0 +1,114 @@
+﻿<UserControl x:Class="AutomaticGroupSemipureStock.Views.NnCheckView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AutomaticGroupSemipureStock.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <!--筛选按钮1-->
+        <ControlTemplate x:Key="bt_screening1">
+            <Viewbox>
+                <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="shaixuan" Width="885.333" Height="885.333" Clip="F1 M 0,0L 885.333,0L 885.333,885.333L 0,885.333L 0,0">
+                    <Canvas x:Name="shaixuan_0" Width="885.333" Height="885.333" Canvas.Left="0" Canvas.Top="0">
+                        <Path x:Name="Path" Width="885.333" Height="885.333" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="#FF939393" Data="F1 M 442.667,0C 198.188,0 0,198.188 0,442.667C 0,687.145 198.188,885.333 442.667,885.333C 687.145,885.333 885.333,687.145 885.333,442.667C 885.437,198.188 687.145,0 442.667,0 Z M 621.12,298.771L 528.745,436.803L 528.745,566.292C 528.745,566.401 528.64,566.615 528.64,566.719C 528.64,568.959 528.213,571.093 527.36,573.12C 527.145,573.76 526.828,574.615 526.401,574.828C 488.64,591.787 416.213,619.307 382.292,631.255C 378.24,632.64 370.667,627.948 367.896,622.292C 367.683,621.864 364.161,614.828 364.161,611.093L 364.161,437.12L 264.745,299.307C 255.36,282.88 267.197,262.401 286.188,262.401L 599.469,262.401C 618.027,262.401 629.864,282.24 621.12,298.771 Z "/>
+                    </Canvas>
+                </Canvas>
+            </Viewbox>
+        </ControlTemplate>
+
+        <!--筛选按钮2-->
+        <ControlTemplate x:Key="bt_screening2">
+            <Viewbox>
+                <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="shaixuan" Width="885.333" Height="885.333" Clip="F1 M 0,0L 885.333,0L 885.333,885.333L 0,885.333L 0,0">
+                    <Canvas x:Name="shaixuan_0" Width="885.333" Height="885.333" Canvas.Left="0" Canvas.Top="0">
+                        <Path x:Name="Path" Width="885.333" Height="885.333" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="#FF3259CE" Data="F1 M 442.667,0C 198.188,0 0,198.188 0,442.667C 0,687.145 198.188,885.333 442.667,885.333C 687.145,885.333 885.333,687.145 885.333,442.667C 885.437,198.188 687.145,0 442.667,0 Z M 621.12,298.771L 528.745,436.803L 528.745,566.292C 528.745,566.401 528.64,566.615 528.64,566.719C 528.64,568.959 528.213,571.093 527.36,573.12C 527.145,573.76 526.828,574.615 526.401,574.828C 488.64,591.787 416.213,619.307 382.292,631.255C 378.24,632.64 370.667,627.948 367.896,622.292C 367.683,621.864 364.161,614.828 364.161,611.093L 364.161,437.12L 264.745,299.307C 255.36,282.88 267.197,262.401 286.188,262.401L 599.469,262.401C 618.027,262.401 629.864,282.24 621.12,298.771 Z "/>
+                    </Canvas>
+                </Canvas>
+            </Viewbox>
+        </ControlTemplate>
+
+        <!--筛选按钮3-->
+        <ControlTemplate x:Key="bt_screening3">
+            <Viewbox>
+                <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="shaixuan" Width="885.333" Height="885.333" Clip="F1 M 0,0L 885.333,0L 885.333,885.333L 0,885.333L 0,0">
+                    <Canvas x:Name="shaixuan_0" Width="885.333" Height="885.333" Canvas.Left="0" Canvas.Top="0">
+                        <Path x:Name="Path" Width="885.333" Height="885.333" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="#FFB5BD82" Data="F1 M 442.667,0C 198.188,0 0,198.188 0,442.667C 0,687.145 198.188,885.333 442.667,885.333C 687.145,885.333 885.333,687.145 885.333,442.667C 885.437,198.188 687.145,0 442.667,0 Z M 621.12,298.771L 528.745,436.803L 528.745,566.292C 528.745,566.401 528.64,566.615 528.64,566.719C 528.64,568.959 528.213,571.093 527.36,573.12C 527.145,573.76 526.828,574.615 526.401,574.828C 488.64,591.787 416.213,619.307 382.292,631.255C 378.24,632.64 370.667,627.948 367.896,622.292C 367.683,621.864 364.161,614.828 364.161,611.093L 364.161,437.12L 264.745,299.307C 255.36,282.88 267.197,262.401 286.188,262.401L 599.469,262.401C 618.027,262.401 629.864,282.24 621.12,298.771 Z "/>
+                    </Canvas>
+                </Canvas>
+            </Viewbox>
+        </ControlTemplate>
+
+        <!--筛选按钮4-->
+        <ControlTemplate x:Key="bt_screening4">
+            <Viewbox>
+                <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="shaixuan" Width="885.333" Height="885.333" Clip="F1 M 0,0L 885.333,0L 885.333,885.333L 0,885.333L 0,0">
+                    <Canvas x:Name="shaixuan_0" Width="885.333" Height="885.333" Canvas.Left="0" Canvas.Top="0">
+                        <Path x:Name="Path" Width="885.333" Height="885.333" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="#FF4AAC35" Data="F1 M 442.667,0C 198.188,0 0,198.188 0,442.667C 0,687.145 198.188,885.333 442.667,885.333C 687.145,885.333 885.333,687.145 885.333,442.667C 885.437,198.188 687.145,0 442.667,0 Z M 621.12,298.771L 528.745,436.803L 528.745,566.292C 528.745,566.401 528.64,566.615 528.64,566.719C 528.64,568.959 528.213,571.093 527.36,573.12C 527.145,573.76 526.828,574.615 526.401,574.828C 488.64,591.787 416.213,619.307 382.292,631.255C 378.24,632.64 370.667,627.948 367.896,622.292C 367.683,621.864 364.161,614.828 364.161,611.093L 364.161,437.12L 264.745,299.307C 255.36,282.88 267.197,262.401 286.188,262.401L 599.469,262.401C 618.027,262.401 629.864,282.24 621.12,298.771 Z "/>
+                    </Canvas>
+                </Canvas>
+            </Viewbox>
+        </ControlTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Text="{Binding Path=Title}" VerticalAlignment="Center"/>
+        <Button x:Name="mBTMain" Grid.Column="1" Width="22" Height="22" Click="Button_Click_Filter" Tag="LastItemCompleteDateString" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}">
+            <ContentControl Template="{StaticResource bt_screening1}"/>
+        </Button>
+
+        <Popup x:Name="mPop" PlacementTarget="{Binding ElementName=mBTMain}"  PopupAnimation="Fade" Placement="Bottom" StaysOpen="False">
+            <Border BorderBrush="#FF5F5F5F" BorderThickness="1">
+                <Grid Background="White" MaxHeight="450" Width="250">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel>
+                        <Border x:Name="mGDPopDate" Visibility="Collapsed" BorderBrush="#FF919191" BorderThickness="0,0,0,1">
+                            <StackPanel Margin="5">
+                                <TextBlock Text="日期范围："/>
+                                <StackPanel Orientation="Horizontal" Grid.Row="1">
+                                    <DatePicker Name="mDPStart" SelectedDateChanged="mDPStart_SelectedDateChanged" Tag="start"/>
+                                    <TextBlock Text=" - " VerticalAlignment="Center"/>
+                                    <DatePicker Name="mDPEnd" SelectedDateChanged="mDPStart_SelectedDateChanged" Tag="end"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border x:Name="mGDPopNum" Visibility="Collapsed" BorderBrush="#FF919191" BorderThickness="0,0,0,1">
+                            <StackPanel Margin="5">
+                                <TextBlock Text="数字范围："/>
+                                <StackPanel Orientation="Horizontal" Grid.Row="1">
+                                    <TextBox x:Name="mTBNumStart" MinWidth="50" Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:NnCheckView}},Path=NumStart}" TextChanged="mTBNumStart_TextChanged"/>
+                                    <TextBlock Text=" - " VerticalAlignment="Center"/>
+                                    <TextBox x:Name="mTBNumEnd" MinWidth="50" Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:NnCheckView}},Path=NumEnd}" TextChanged="mTBNumStart_TextChanged"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                    <ListBox Grid.Row="1" x:Name="mLBScreening" SelectionMode="Extended" SelectionChanged="mLBScreening_SelectionChanged" BorderBrush="{x:Null}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding Path=IsChecked}" Content="{Binding Path=Name}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5">
+                        <Button Content="清除筛选" Click="Button_Click_FilterConfirm"  Tag="clear" Margin="10,0,12,0" Padding="7,1"/>
+                        <Button Content="确定" Click="Button_Click_FilterConfirm" Tag="screeningok" Margin="0,0,12,0" Padding="7,1"/>
+                        <Button Content="取消" Click="Button_Click_FilterConfirm" Tag="screeningcancel" Margin="0,0,12,0" Padding="7,1"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

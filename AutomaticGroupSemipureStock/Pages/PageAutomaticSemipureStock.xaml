@@ -1,0 +1,116 @@
+﻿<Page x:Class="AutomaticGroupSemipureStock.Pages.PageAutomaticSemipureStock"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:AutomaticGroupSemipureStock.Pages"
+      xmlns:view="clr-namespace:AutomaticGroupSemipureStock.Views"
+      xmlns:dtats="clr-namespace:AutomaticGroupSemipureStock.Datas"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="PageAutomaticSemipureStock">
+    <Page.Resources>
+        <SolidColorBrush x:Key="DataGridLine" Color="#FFA4A4A4"/>
+
+        <dtats:DateConvert x:Key="dateconvert"/>
+        <dtats:PurityConvert x:Key="purityconvert"/>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Menu>
+            <MenuItem Header="编辑" Click="MenuItem_Click" Tag="edit"/>
+            <MenuItem Header="打开表格" Click="MenuItem_Click" Tag="opentable"/>
+        </Menu>
+        
+        <WrapPanel Grid.Row="1">
+            
+        </WrapPanel>
+        
+        <view:DataGridCanEdit Grid.Row="2" x:Name="mDGMain"  BorderThickness="0,1,0,0" AutoGenerateColumns="False" HorizontalGridLinesBrush="{StaticResource DataGridLine}" VerticalGridLinesBrush="{StaticResource DataGridLine}" CanUserAddRows="False" SelectionUnit="CellOrRowHeader" CanUserResizeRows="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Path=ID}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="ID" Trait="ID" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter" CheckType="Number"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=WorkNo}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="WO NO" Trait="WorkNo" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter" CheckType="Number"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=OperationName}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="Operation Name" Trait="OperationName" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=Status}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="Status" Trait="Status" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=PurGroup}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="Purify Group" Trait="PurGroup" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=PurUser}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="Purify User" Trait="PurUser" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=Comments}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="Comments" Trait="Comments" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=UserComments}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="Comments" Trait="UserComments" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=Quality}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="半纯品量" Trait="Quality" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=StockQuality}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="库存量" Trait="StockQuality" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=Purity, Converter={StaticResource purityconvert}}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="半纯品纯度" Trait="Purity" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=AnalyticalInstruments}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="QC/LC2030分析" Trait="AnalyticalInstruments" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=Coordinate}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="库存坐标" Trait="Coordinate" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=AddDate, Converter={StaticResource dateconvert}}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="添加日期" Converter="{StaticResource dateconvert}" Trait="AddDate" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Path=RemoveDate, Converter={StaticResource dateconvert}}">
+                    <DataGridTextColumn.Header>
+                        <view:NnCheckView Title="取出日期" Converter="{StaticResource dateconvert}" Trait="RemoveDate" OnCheck="NnCheckView_OnCheck" StartFilter="NnCheckView_StartFilter"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </view:DataGridCanEdit>
+    </Grid>
+</Page>

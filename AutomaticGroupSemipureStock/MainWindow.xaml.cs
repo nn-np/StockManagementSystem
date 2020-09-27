@@ -22,10 +22,19 @@ namespace AutomaticGroupSemipureStock
     {
         public delegate void TheStatusBarState(bool isWarning = false, string left = "就绪", string right = "", double progress = 0, bool isComplate = true, string message = null);
         public static TheStatusBarState StatusBar { get; set; }
+
+        private Pages.PageAutomaticSemipureStock PASS;
         public MainWindow()
         {
             InitializeComponent();
             StatusBar = StatusBarState;
+            Init();
+        }
+
+        private void Init()
+        {
+            PASS = new Pages.PageAutomaticSemipureStock();
+            mFrame.Content = PASS;
         }
 
         /// <summary>
