@@ -20,9 +20,9 @@ using System.Windows.Shapes;
 namespace AutomaticGroupSemipureStock.Pages
 {
     /// <summary>
-    /// 自动组半纯品库页面
+    /// 搜索页面
     /// </summary>
-    public partial class PageAutomaticSemipureStock : Page, PageAction
+    public partial class PageSearch : Page
     {
         // ---------------数据们-----------------
         private ObservableCollection<AutomaticStockInfo> _MainList;     // 主列表
@@ -31,22 +31,25 @@ namespace AutomaticGroupSemipureStock.Pages
         // ----------------筛选-------------------
         private NnCheckView CurrentCheckView;// 当前筛选视图
         private HashSet<NnCheckView> CheckViews;
-        public PageAutomaticSemipureStock()
+
+        public PageSearch(string obj)
         {
             InitializeComponent();
+            mSBMain.Text = obj;
             CheckViews = new HashSet<NnCheckView>();
-            Init();
+            Init(obj);
         }
 
-        private async void Init()
+        private async void Init(string obj)
         {
+            List<SearchValue> ll = GetSerachValue(obj);
             MainWindow.StatusBar(true, "加载数据...");
             try
             {
 #if (DEBUG)
-                _MainList = await WEBHelper.HttpGetJSONAsync<ObservableCollection<AutomaticStockInfo>>("http://10.11.30.155:5000/api/stockinfo/AutomaticStockInfos");
+                _MainList = await WEBHelper.HttpGetJSONAsync<ObservableCollection<AutomaticStockInfo>>("http://10.11.30.155:5000/api/stockinfo/AutomaticStockSearch",ll);
 #else
-                _MainList = await WEBHelper.HttpGetJSONAsync<ObservableCollection<AutomaticStockInfo>>("http://10.11.30.155:5004/api/stockinfo/AutomaticStockInfos");
+                _MainList = await WEBHelper.HttpGetJSONAsync<ObservableCollection<AutomaticStockInfo>>("http://10.11.30.155:5004/api/stockinfo/AutomaticStockSearch",ll);
 #endif
                 foreach (var v in _MainList)
                 {
@@ -64,9 +67,31 @@ namespace AutomaticGroupSemipureStock.Pages
         }
 
         /// <summary>
-        /// 保存与更新
+        /// 获取要搜索的字符
         /// </summary>
-        /// <param name="obj"></param>
+        private List<SearchValue> GetSerachValue(string obj)
+        {
+            if (string.IsNullOrWhiteSpace(obj)) return null;
+            List<SearchValue> ll = new List<SearchValue>();
+            var vs = obj.Split('\n');
+            foreach(var v in vs)
+            {
+                if (string.IsNullOrWhiteSpace(v)) continue;
+                var vv = v.Trim();
+                bool b = long.TryParse(vv, out long l);
+                if (b)
+                {
+                    ll.Add(new SearchValue() { Type = SearchType.WorkNo, Value = vv });
+                }
+                else
+                {
+                    ll.Add(new SearchValue() { Type = SearchType.Coordinate, Value = vv });
+                }
+            }
+
+            return ll;
+        }
+
         private async void UpdateAndSave(AutomaticStockInfo obj)
         {
             try
@@ -84,95 +109,59 @@ namespace AutomaticGroupSemipureStock.Pages
             }
         }
 
-        /// <summary>
-        /// 移除库存
-        /// </summary>
-        private async void RemoveStock()
-        {
-            HashSet<AutomaticStockInfo> ll = GetSelectedItems();
-            if (ll.Count <= 0) return;
-            Dictionary<long, AutomaticStockInfo> pairs = new Dictionary<long, AutomaticStockInfo>();
-            HashSet<long> ls = new HashSet<long>();
-            foreach (var v in ll)
-            {
-                ls.Add(v.ID);
-                pairs.Add(v.ID, v);
-            }
-            try
-            {
-#if(DEBUG)
-                List<long> vs = await WEBHelper.HttpPostJSONAsync<List<long>>("http://10.11.30.155:5000/api/stockinfo/AutomaticStockRemove", ls);
-#else
-                List<long> vs = await WEBHelper.HttpPostJSONAsync<List<long>>("http://10.11.30.155:5004/api/stockinfo/AutomaticStockRemove", ls);
-#endif
-                foreach (var v in vs)
-                {
-                    if (pairs.ContainsKey(v))
-                    {
-                        _CurrentList.Remove(pairs[v]);
-                        _MainList.Remove(pairs[v]);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                MainWindow.StatusBar(false, $"移除库存出现错误：{e.Message}");
-            }
-        }
-
-        private HashSet<AutomaticStockInfo> GetSelectedItems()
-        {
-            HashSet<AutomaticStockInfo> ll = new HashSet<AutomaticStockInfo>();
-            foreach(var v in mDGMain.SelectedCells)
-            {
-                var asi = v.Item as AutomaticStockInfo;
-                if (asi == null) continue;
-                ll.Add(asi);
-            }
-            return ll;
-        }
-
-#region 事件
+        #region 事件
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
             switch (((Control)sender).Tag)
             {
-                case "edit":        // 开始编辑
-                    MainWindow.Action?.Invoke("edit");
-                    break;
-                case "opentable":   // 打开表格
+                case "opentable":// 打开表格
                     OpenTable();
                     break;
-                case "removestock": // 移除库存
-                    RemoveStock();
+                case "backprevious":// 返回
+                    MainWindow.Action?.Invoke("backprevious");
                     break;
                 default:return;
             }
         }
 
-        private void mSBMain_OnSearching(object sender, Views.SearcherRoutedEventArgs e)
+        private async void OpenTable()
         {
-            if (string.IsNullOrEmpty(e.SearchValue)) return;
-            MainWindow.Search(e.SearchValue);
+            if (_CurrentList == null || _CurrentList.Count <= 0) return;
+
+            MainWindow.StatusBar?.Invoke(true, "打开表格...");
+
+            try
+            {
+                await Task.Run(() =>
+                {
+                    ExcelManager.OpenTable(_CurrentList);
+                });
+            }
+            catch { MainWindow.StatusBar?.Invoke(false, "打开表格出现错误，请重试!"); return; }
+
+            MainWindow.StatusBar?.Invoke();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             switch (((Control)sender).Tag)
             {
-                case "refresh":         // 刷新
-                    _removeFilter();
-                    Init();
-                    break;
-                case "removefilter":    // 移除所有筛选
+                case "removefilter":// 清除所有筛选
                     _removeFilter();
                     break;
-                default: return;
+                default:return;
             }
         }
-#endregion // 事件
+        /// <summary>
+        /// 搜索
+        /// </summary>
+        private void mSBMain_OnSearching(object sender, Views.SearcherRoutedEventArgs e)
+        {
+            Init(e.SearchValue);
+        }
+        #endregion// 事件
 
-#region 筛选
+        #region 筛选
         /// <summary>
         /// 清除所有筛选
         /// </summary>
@@ -261,28 +250,24 @@ namespace AutomaticGroupSemipureStock.Pages
             }
             return true;
         }
-#endregion // 筛选
+        #endregion // 筛选
+    }
 
+    /// <summary>
+    /// 搜索内容
+    /// </summary>
+    struct SearchValue
+    {
+        public string Value { get; set; }
+        public SearchType Type { get; set; }
+    }
 
-        /// <summary>
-        /// 打开表格
-        /// </summary>
-        public async void OpenTable()
-        {
-            if (_CurrentList == null || _CurrentList.Count <= 0) return;
-
-            MainWindow.StatusBar?.Invoke(true, "打开表格...");
-
-            try
-            {
-                await Task.Run(() =>
-                {
-                    ExcelManager.OpenTable(_CurrentList);
-                });
-            }
-            catch { MainWindow.StatusBar?.Invoke(false, "打开表格出现错误，请重试!"); return; }
-
-            MainWindow.StatusBar?.Invoke();
-        }
+    /// <summary>
+    /// 搜索类型
+    /// </summary>
+    enum SearchType
+    {
+        WorkNo,
+        Coordinate
     }
 }

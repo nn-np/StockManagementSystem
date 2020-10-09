@@ -23,18 +23,75 @@ namespace AutomaticGroupSemipureStock
         public delegate void TheStatusBarState(bool isWarning = false, string left = "就绪", string right = "", double progress = 0, bool isComplate = true, string message = null);
         public static TheStatusBarState StatusBar { get; set; }
 
-        private Pages.PageAutomaticSemipureStock PASS;
+        public static Action<string> Search { get; set; }   // 搜索
+        public static Action<string> Action { get; set; }   // 页面动作
+
+        private Page _Page;                                 // 当前页面
         public MainWindow()
         {
             InitializeComponent();
+            NavigationCommands.BrowseBack.InputGestures.Clear();
             StatusBar = StatusBarState;
+            Search = ToSearch;
+            Action = PageActions;
             Init();
+        }
+
+        private void PageActions(string obj)
+        {
+            switch (obj)
+            {
+                case "back":// 返回
+                    Init();
+                    break;
+                case "edit":// 编辑
+                    Edit();
+                    break;
+                case "backprevious":
+                    mFrame.Content = _Page;
+                    if (mFrame.CanGoBack)
+                    {
+                        mFrame.RemoveBackEntry();
+                    }
+                    break;
+                default: return;
+            }
+        }
+
+        private void Edit()
+        {
+            var v = new Pages.PageAutomaticSemipureStockEdit();
+            _Page = v;
+            mFrame.Content = _Page;
+            if (mFrame.CanGoBack)
+            {
+                mFrame.RemoveBackEntry();
+            }
         }
 
         private void Init()
         {
-            PASS = new Pages.PageAutomaticSemipureStock();
-            mFrame.Content = PASS;
+            var v = new Pages.PageAutomaticSemipureStock();
+            _Page = v;
+            mFrame.Content = _Page;
+            if (mFrame.CanGoBack)
+            {
+                mFrame.RemoveBackEntry();
+            }
+        }
+
+        /// <summary>
+        /// 搜索
+        /// </summary>
+        private void ToSearch(string obj)
+        {
+            Pages.PageSearch ps = new Pages.PageSearch(obj);
+
+            mFrame.Content = ps;
+            if (mFrame.CanGoBack)
+            {
+                mFrame.RemoveBackEntry();
+            }
         }
 
         /// <summary>

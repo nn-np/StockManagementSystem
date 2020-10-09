@@ -20,18 +20,20 @@ using System.Windows.Shapes;
 namespace AutomaticGroupSemipureStock.Pages
 {
     /// <summary>
-    /// 自动组半纯品库页面
+    /// 自动组半纯品库编辑页面
     /// </summary>
-    public partial class PageAutomaticSemipureStock : Page, PageAction
+    public partial class PageAutomaticSemipureStockEdit : Page, PageAction
     {
         // ---------------数据们-----------------
         private ObservableCollection<AutomaticStockInfo> _MainList;     // 主列表
         private ObservableCollection<AutomaticStockInfo> _CurrentList;  // 当前列表
 
+
         // ----------------筛选-------------------
         private NnCheckView CurrentCheckView;// 当前筛选视图
         private HashSet<NnCheckView> CheckViews;
-        public PageAutomaticSemipureStock()
+
+        public PageAutomaticSemipureStockEdit()
         {
             InitializeComponent();
             CheckViews = new HashSet<NnCheckView>();
@@ -43,14 +45,44 @@ namespace AutomaticGroupSemipureStock.Pages
             MainWindow.StatusBar(true, "加载数据...");
             try
             {
+                List<AutomaticStockInfo> ll = null;
 #if (DEBUG)
-                _MainList = await WEBHelper.HttpGetJSONAsync<ObservableCollection<AutomaticStockInfo>>("http://10.11.30.155:5000/api/stockinfo/AutomaticStockInfos");
+                ll = await WEBHelper.HttpGetJSONAsync<List<AutomaticStockInfo>>("http://10.11.30.155:5000/api/stockinfo/automaticstockemptcoordinates");
 #else
-                _MainList = await WEBHelper.HttpGetJSONAsync<ObservableCollection<AutomaticStockInfo>>("http://10.11.30.155:5004/api/stockinfo/AutomaticStockInfos");
+                ll = await WEBHelper.HttpGetJSONAsync<List<AutomaticStockInfo>>("http://10.11.30.155:5004/api/stockinfo/automaticstockemptcoordinates");
 #endif
-                foreach (var v in _MainList)
+                ll.Sort((x, y) =>
+                {
+                    if (x == null || y == null) return 0;
+                    var v1 = x.Coordinate.Split('-');
+                    var v2 = y.Coordinate.Split('-');
+                    if (v1 == null || v2 == null || v1.Length != 3 || v2.Length != 3) return 0;
+                    if (v1[1] == v2[1])
+                    {
+                        if (v1[2][0] == v2[2][0])
+                        {
+                            int.TryParse(v1[2].Substring(1), out int i1);
+                            int.TryParse(v2[2].Substring(1), out int i2);
+                            return i1 - i2;
+                        }
+                        return v1[2][0] - v2[2][0];
+                    }
+                    else
+                    {
+                        if (v1[1][0] == v2[1][0])
+                        {
+                            int.TryParse(v1[1].Substring(1), out int i1);
+                            int.TryParse(v2[1].Substring(1), out int i2);
+                            return i1 - i2;
+                        }
+                        return v1[1].CompareTo(v2[1]);
+                    }
+                });
+                _MainList = new ObservableCollection<AutomaticStockInfo>();
+                foreach (var v in ll)
                 {
                     v.Update = UpdateAndSave;
+                    _MainList.Add(v);
                 }
                 _CurrentList = _MainList;
                 mDGMain.ItemsSource = _CurrentList;
@@ -63,12 +95,13 @@ namespace AutomaticGroupSemipureStock.Pages
             MainWindow.StatusBar();
         }
 
-        /// <summary>
-        /// 保存与更新
-        /// </summary>
-        /// <param name="obj"></param>
         private async void UpdateAndSave(AutomaticStockInfo obj)
         {
+            if (obj.WorkNo > 0)
+            {
+                obj.State = StockState.Filled;
+                obj.AddDate = DateTime.Now;
+            }
             try
             {
 #if (DEBUG)
@@ -77,83 +110,28 @@ namespace AutomaticGroupSemipureStock.Pages
                 var v = await WEBHelper.HttpPostBodyAsync("http://10.11.30.155:5004/api/stockinfo/AutomaticStockUpdate", obj);
 #endif
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
-                MainWindow.StatusBar(false, $"数据更新出现错误：{e.Message},ID：{obj.ID}");
-            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
 
-        /// <summary>
-        /// 移除库存
-        /// </summary>
-        private async void RemoveStock()
-        {
-            HashSet<AutomaticStockInfo> ll = GetSelectedItems();
-            if (ll.Count <= 0) return;
-            Dictionary<long, AutomaticStockInfo> pairs = new Dictionary<long, AutomaticStockInfo>();
-            HashSet<long> ls = new HashSet<long>();
-            foreach (var v in ll)
-            {
-                ls.Add(v.ID);
-                pairs.Add(v.ID, v);
-            }
-            try
-            {
-#if(DEBUG)
-                List<long> vs = await WEBHelper.HttpPostJSONAsync<List<long>>("http://10.11.30.155:5000/api/stockinfo/AutomaticStockRemove", ls);
-#else
-                List<long> vs = await WEBHelper.HttpPostJSONAsync<List<long>>("http://10.11.30.155:5004/api/stockinfo/AutomaticStockRemove", ls);
-#endif
-                foreach (var v in vs)
-                {
-                    if (pairs.ContainsKey(v))
-                    {
-                        _CurrentList.Remove(pairs[v]);
-                        _MainList.Remove(pairs[v]);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                MainWindow.StatusBar(false, $"移除库存出现错误：{e.Message}");
-            }
-        }
 
-        private HashSet<AutomaticStockInfo> GetSelectedItems()
-        {
-            HashSet<AutomaticStockInfo> ll = new HashSet<AutomaticStockInfo>();
-            foreach(var v in mDGMain.SelectedCells)
-            {
-                var asi = v.Item as AutomaticStockInfo;
-                if (asi == null) continue;
-                ll.Add(asi);
-            }
-            return ll;
-        }
-
-#region 事件
+        #region 事件
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
             switch (((Control)sender).Tag)
             {
-                case "edit":        // 开始编辑
-                    MainWindow.Action?.Invoke("edit");
+                case "back":        // 返回
+                    MainWindow.Action?.Invoke("back");
                     break;
                 case "opentable":   // 打开表格
                     OpenTable();
                     break;
-                case "removestock": // 移除库存
-                    RemoveStock();
-                    break;
-                default:return;
+                default: return;
             }
         }
 
         private void mSBMain_OnSearching(object sender, Views.SearcherRoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(e.SearchValue)) return;
-            MainWindow.Search(e.SearchValue);
+
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -167,12 +145,12 @@ namespace AutomaticGroupSemipureStock.Pages
                 case "removefilter":    // 移除所有筛选
                     _removeFilter();
                     break;
-                default: return;
+                default:return;
             }
         }
-#endregion // 事件
+        #endregion // 事件
 
-#region 筛选
+        #region 筛选
         /// <summary>
         /// 清除所有筛选
         /// </summary>
@@ -261,8 +239,7 @@ namespace AutomaticGroupSemipureStock.Pages
             }
             return true;
         }
-#endregion // 筛选
-
+        #endregion // 筛选
 
         /// <summary>
         /// 打开表格

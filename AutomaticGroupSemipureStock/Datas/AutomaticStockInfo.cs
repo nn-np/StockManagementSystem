@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace AutomaticGroupSemipureStock.Datas
@@ -9,7 +11,7 @@ namespace AutomaticGroupSemipureStock.Datas
     /// <summary>
     /// 自动组半纯品信息
     /// </summary>
-    class AutomaticStockInfo
+    class AutomaticStockInfo : IEditableObject
     {
         /// <summary>
         /// ID
@@ -69,6 +71,28 @@ namespace AutomaticGroupSemipureStock.Datas
         /// 移除时间
         /// </summary>
         public DateTime RemoveDate { get; set; }
+
+
+        [JsonIgnore]
+        public Action<AutomaticStockInfo> Update { get; set; }
+        protected bool isEdited;
+
+        public void BeginEdit()
+        {
+            isEdited = false;
+        }
+
+        public void CancelEdit()
+        {
+            isEdited = true;
+        }
+
+        public void EndEdit()
+        {
+            if (isEdited) return;
+            Update?.Invoke(this);
+            isEdited = true;
+        }
     }
 
     /// <summary>

@@ -58,23 +58,6 @@ namespace AutomaticGroupSemipureStock.Views
 
             this.KeyDown += DataGridCanEdit_KeyDown;
 
-            this.MouseDoubleClick += DataGridCanEdit_MouseDoubleClick;
-        }
-
-        private void DataGridCanEdit_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            if (CurrentCell == null) return;
-            DataGridRow row = ItemContainerGenerator.ContainerFromItem(CurrentCell.Item) as DataGridRow;
-            if (row == null) return;
-            if (row.DetailsVisibility == Visibility.Visible)
-            {
-                row.DetailsVisibility = Visibility.Collapsed;
-            }
-            else
-            {
-                row.DetailsVisibility = Visibility.Visible;
-                _selectedRow = row;
-            }
         }
 
         /// <summary>
